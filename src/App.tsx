@@ -3,19 +3,25 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./lib/firebase";
 import LoginPage from "./components/auth/LoginPage";
+import ReportsPage from "./app/reports/ReportsPage";
 import MainLayout from "./app/layout/MainLayout";
 import { CircularProgress, Box } from "@mui/material";
+import { multiFactor } from "firebase/auth"; // ← ADD THIS IMPORT
+import EnrollMFAScreen from "./components/auth/EnrollMFAScreen"; // ← ADD THIS IMPORT
 
 function ProtectedRoutes() {
+  const user = auth.currentUser;
+
+  if (!multiFactor(user!).enrolledFactors.length) {
+    return <EnrollMFAScreen />;
+  }
+
   return (
     <MainLayout>
       <Routes>
-        <Route
-          path="/reports"
-          element={<div>Reports Page – MVP coming next</div>}
-        />
-        <Route path="/analysis" element={<div>Analysis Page</div>} />
-        <Route path="/actions" element={<div>Actions Page</div>} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/analysis" element={<div>Analysis coming</div>} />
+        <Route path="/actions" element={<div>Actions coming</div>} />
         <Route path="*" element={<Navigate to="/reports" />} />
       </Routes>
     </MainLayout>
