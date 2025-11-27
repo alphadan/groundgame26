@@ -1,0 +1,777 @@
+[
+  {
+    "column_name": "Area#",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Precinct",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PAvoterid",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Last_Name",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "First_Name",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Middle_Name",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Suffix",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Sex",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Date_Of_Birth",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Date_Registered",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Voter_Status",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "StatusChangeDate",
+    "data_type": "TIMESTAMP",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Political_Party",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "House__",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "HouseNoSuffix",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "StreetNameComplete",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Apt__",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Address_Line_2",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "City",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "State",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Zip_Code",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "MAddress_Line_1",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "MAddress_Line_2",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "MCity",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "MState",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "MZip_Code",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PollingPlaceDescript",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Ward",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "School",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Municipality",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Magisterial",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Legislative",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Senatorial",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Congressional",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "County",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Rep State Comm",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Dem Zone",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Rep Area",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Precinct Split",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PollPlaceAdd",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PollPlaceCSZ",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Last_Date_Voted",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Date_Last_Changed",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PhoneNumHome",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_20_25",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_20_25_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_24",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_24_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_23_24",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_23_24_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_23",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_23_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_23",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_23_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_22",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_22_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_17_22",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_17_22_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_02_21",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_02_21_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_18_21",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_18_21_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_20",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_20_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_06_02_20",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_06_02_20_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_19",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_19_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_21_19",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_21_19_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_18",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_18_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_15_18",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_15_18_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_17",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_17_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_17",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_17_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_16",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_16_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_26_16",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_26_16_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_15",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_15_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_19_15",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_19_15_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_04_14",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_04_14_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_20_14",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_20_14_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_13",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_05_13_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_21_13",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_21_13_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_12",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_12_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_24_12",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_24_12_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_11",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_11_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_17_11",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_17_11_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_02_10",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_02_10_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_18_10",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_18_10_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_09",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_03_09_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_19_09",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_19_09_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_04_08",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_04_08_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_22_08",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_04_22_08_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_07",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_06_07_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_15_07",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_15_07_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_06",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_07_06_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_06",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "PR_05_16_06_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_05",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "GN_11_08_05_VM",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_AppType",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_PrecinctSplit",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_PartyDesc",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_AppIssuedDate",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_AppReturnedDate",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_BallotSent",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_BallotReturned",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "VBM_DOB",
+    "data_type": "DATE",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_LastName",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_FirstName",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_MiddleName",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_SuffixName",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_PrimaryPhone",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_Landline",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_Mobile",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_Age",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_ObservedParty",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_OfficialParty",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_CalculatedParty",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_HouseholdParty",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_RegistrationStatus",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_GeneralFrequency",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_PrimaryFrequency",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_Moved",
+    "data_type": "BOOL",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_CDName",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_LDName",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_SDName",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_VoterKey",
+    "data_type": "INT64",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_RNCRegId",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "RNCfiles_ModeledEthnicity",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  },
+  {
+    "column_name": "Annual MIB Reminder",
+    "data_type": "STRING",
+    "is_nullable": "YES"
+  }
+]

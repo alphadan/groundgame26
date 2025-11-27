@@ -1,32 +1,37 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const cors = require("cors")({ origin: true });
+const { BigQuery } = require("@google-cloud/bigquery");
+admin.initializeApp();
 
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
-const logger = require("firebase-functions/logger");
+const bigquery = new BigQuery();
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+exports.queryVoters = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const idToken = req.headers.authorization?.split("Bearer ")[1];
+      if (!idToken) return res.status(401).send("No token");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      const uid = decoded.uid;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+      // TODO: Add custom claims for precinct access here later
+      const allowedPrecincts = ["*"]; // temporary full access
+
+      let sql = req.body.sql || req.query.sql;
+      if (!sql) return res.status(400).send("No SQL");
+
+      // Security: restrict to our table + precinct filter
+      if (!sql.includes("FROM `groundgame26_voters.chester_county`")) {
+        return res.status(403).send("Invalid table");
+      }
+
+      console.log("Executing for user:", decoded.email);
+      const [rows] = await bigquery.query({ query: sql });
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send(err.message);
+    }
+  });
+});
