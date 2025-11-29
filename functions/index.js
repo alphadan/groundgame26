@@ -35,3 +35,65 @@ exports.queryVoters = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+exports.assignRole = functions.https.onCall(async (data, context) => {
+  if (!context.auth)
+    throw new functions.https.HttpsError("unauthenticated", "Login required");
+
+  const caller = context.auth.token;
+  const {
+    email,
+    role,
+    county_code,
+    area_district,
+    precincts,
+    affiliation = "gop",
+  } = data;
+
+  // Permission check
+  if (!["county_chair", "area_rep"].includes(caller.role)) {
+    throw new functions.https.HttpsError("permission-denied", "Not authorized");
+  }
+
+  let userRecord;
+  try {
+    userRecord = await admin.auth().getUserByEmail(email);
+  } catch {
+    // Create user if doesn't exist
+    userRecord = await admin.auth().createUser({
+      email,
+      password: Math.random().toString(36).slice(-10) + "A1!",
+    });
+  }
+
+  const claims: any = {
+    affiliation,
+    role,
+    county_code,
+  };
+  if (role === "area_rep") claims.area_districts = [area_district];
+  if (role === "committeeman") claims.precincts = precincts;
+
+  await admin.auth().setCustomUserClaims(userRecord.uid, claims);
+
+  // Create users_meta
+  await admin
+    .firestore()
+    .collection("users_meta")
+    .doc(userRecord.uid)
+    .set(
+      {
+        email: userRecord.email,
+        display_name: userRecord.displayName || email.split("@")[0],
+        affiliation,
+        role,
+        county_code,
+        area_district: area_district || null,
+        precincts: precincts || [],
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+  return { success: true, uid: userRecord.uid };
+});

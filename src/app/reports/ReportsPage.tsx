@@ -1,4 +1,4 @@
-// src/app/reports/ReportsPage.tsx
+// src/app/reports/ReportsPage.tsx — FINAL PRODUCTION VERSION
 import { useVoters } from "../../hooks/useVoters";
 import { BarChart } from "@mui/x-charts/BarChart";
 import {
@@ -6,8 +6,8 @@ import {
   Typography,
   Button,
   Paper,
-  CircularProgress,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { saveAs } from "file-saver";
 
@@ -46,8 +46,8 @@ export default function ReportsPage() {
 
   return (
     <Box p={3}>
-      <Typography variant="h4" gutterBottom fontWeight="bold">
-        Chester County – Live Voter Intelligence
+      <Typography variant="h4" gutterBottom fontWeight="bold" color="#d32f2f">
+        Chester County — LIVE Voter Intelligence
       </Typography>
 
       <Paper sx={{ p: 4, mb: 4 }}>
@@ -58,7 +58,7 @@ export default function ReportsPage() {
           mb={2}
         >
           <Typography variant="h6">
-            Party Affiliation by Age Group (Real Data)
+            Party Affiliation by Age Group (15,922 Voters)
           </Typography>
           <Button
             variant="contained"
@@ -70,16 +70,16 @@ export default function ReportsPage() {
         </Box>
 
         {isLoading && (
-          <Box textAlign="center" py={4}>
+          <Box textAlign="center" py={6}>
             <CircularProgress />
-            <Typography mt={2}>Loading live voter data...</Typography>
+            <Typography mt={2}>
+              Loading live voter data from BigQuery...
+            </Typography>
           </Box>
         )}
 
         {error && (
-          <Alert severity="error">
-            Error loading data: {(error as Error).message}
-          </Alert>
+          <Alert severity="error">Error: {(error as Error).message}</Alert>
         )}
 
         {!isLoading && !error && chartData.length > 0 && (
@@ -89,22 +89,21 @@ export default function ReportsPage() {
             series={[
               { dataKey: "R", label: "Republican", color: "#d32f2f" },
               { dataKey: "D", label: "Democrat", color: "#1976d2" },
-              { dataKey: "Other", label: "Other", color: "#666666" },
+              { dataKey: "Other", label: "Other", color: "#666" },
             ]}
             height={420}
-            margin={{ top: 60, right: 30, bottom: 60, left: 80 }}
           />
         )}
       </Paper>
 
-      <Paper sx={{ p: 4, height: 600 }}>
+      <Paper sx={{ p: 4, height: 700 }}>
         <Typography variant="h6" gutterBottom>
           Interactive Chester County Precinct Map
         </Typography>
         <iframe
           src="https://alphadan.github.io/chester-county-precincts/"
           width="100%"
-          height="560"
+          height="660"
           style={{ border: 0, borderRadius: 8 }}
           title="Chester County Precincts"
         />

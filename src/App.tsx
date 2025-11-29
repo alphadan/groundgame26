@@ -8,6 +8,7 @@ import LoginPage from "./components/auth/LoginPage";
 import EnrollMFAScreen from "./components/auth/EnrollMFAScreen";
 import MainLayout from "./app/layout/MainLayout";
 import ReportsPage from "./app/reports/ReportsPage";
+import ManageTeamPage from "./app/admin/ManageTeamPage";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
 export default function App() {
@@ -70,6 +71,7 @@ export default function App() {
             />
             <Route path="/actions" element={<div>Actions – Coming Soon</div>} />
             <Route path="*" element={<Navigate to="/reports" replace />} />
+            <Route path="/manage-team" element={<ManageTeamPage />} />
           </Routes>
         </MainLayout>
       );
