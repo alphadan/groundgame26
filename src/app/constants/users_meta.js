@@ -459,7 +459,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "o5ODZCeRK9uEwl6zKGJ4",
+    UID: "Z7VRGCTtsPRcD38ZIEggwHbrX202",
     display_name: "Daniel Keane",
     email: "",
     phone: "",
