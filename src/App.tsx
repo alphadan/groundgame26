@@ -9,6 +9,7 @@ import EnrollMFAScreen from "./components/auth/EnrollMFAScreen";
 import MainLayout from "./app/layout/MainLayout";
 import ReportsPage from "./app/reports/ReportsPage";
 import ManageTeamPage from "./app/admin/ManageTeamPage";
+import MyPrecinctsPage from "./app/dashboard/MyPrecinctsPage";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/actions" element={<div>Actions – Coming Soon</div>} />
             <Route path="*" element={<Navigate to="/reports" replace />} />
             <Route path="/manage-team" element={<ManageTeamPage />} />
+            <Route path="/my-precincts" element={<MyPrecinctsPage />} />
           </Routes>
         </MainLayout>
       );

@@ -27,7 +27,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "QOtmDPJNXoEW1GoKtKZQ",
     display_name: "Art Wright",
     email: "",
     phone: "",
@@ -54,34 +54,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
-    display_name: "",
-    email: "",
-    phone: "",
-    photo_url: "",
-
-    // ORGANIZATION & ROLE
-    affiliation: "gop",
-    role: "committeeman",
-
-    // LOCATION
-    county_code: "15",
-    county_name: "Chester County",
-    area_district: "15",
-    precincts: ["225"],
-
-    // PERMISSIONS (for UI)
-    can_export_csv: true,
-    can_view_phone: true,
-    can_view_full_address: true,
-    can_manage_team: false,
-
-    // METADATA
-    created_at: firebase.firestore.FieldValue.serverTimestamp(),
-    last_login: firebase.firestore.FieldValue.serverTimestamp(),
-  },
-  {
-    UID: "",
+    UID: "inQfvkEQRC9wruW5s1LN",
     display_name: "Carol Kulp",
     email: "",
     phone: "",
@@ -108,7 +81,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "JDYbNTRYdPVNBjeRg7no",
     display_name: "Robert Kulp",
     email: "",
     phone: "",
@@ -135,7 +108,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "2w9koesJA9Tvii8zUsww",
     display_name: "Robert Knecht",
     email: "",
     phone: "",
@@ -162,7 +135,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "ovcM408yJVf6W9pDUdLQ",
     display_name: "Nina Petro",
     email: "",
     phone: "",
@@ -189,7 +162,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "pzpcReOJeRXWxtTBJmW5",
     display_name: "Dana Young",
     email: "",
     phone: "",
@@ -216,7 +189,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "wR6MvKAH3eazamWFcc4i",
     display_name: "Joshua Wall",
     email: "",
     phone: "",
@@ -243,7 +216,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "QsWJeNWxz6b0CnJbSpum",
     display_name: "Sharon Wolf",
     email: "",
     phone: "",
@@ -270,7 +243,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "DcMvsL8ddHWWkorOUHHb",
     display_name: "Nick Ohar",
     email: "",
     phone: "",
@@ -297,7 +270,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "78XBjIWrQxJP1ia4Ktcj",
     display_name: "Brendan Murphy",
     email: "",
     phone: "",
@@ -324,7 +297,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "WCLJzkc14gZi4Jxqjp9a",
     display_name: "Tricia Daller",
     email: "",
     phone: "",
@@ -351,7 +324,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "Yz9jabLcib2KptwYTWoD",
     display_name: "Richard Felice",
     email: "",
     phone: "",
@@ -378,7 +351,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "saevFRWjxOlxkVefwIq4",
     display_name: "Joseph Felice",
     email: "",
     phone: "",
@@ -405,7 +378,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "qlQo9xyKiQ3zvWnh9J7x",
     display_name: "Herb Myers",
     email: "",
     phone: "",
@@ -432,7 +405,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "DYd5Fw5JxAElj4aD2DyO",
     display_name: "Joseph Piazza",
     email: "",
     phone: "",
@@ -459,7 +432,7 @@ const users_meta = [
     last_login: firebase.firestore.FieldValue.serverTimestamp(),
   },
   {
-    UID: "",
+    UID: "ffPwJ48sNLzNMIfBaE2R",
     display_name: "Herb Phillips",
     email: "",
     phone: "",
@@ -480,6 +453,33 @@ const users_meta = [
     can_view_phone: true,
     can_view_full_address: true,
     can_manage_team: false,
+
+    // METADATA
+    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+    last_login: firebase.firestore.FieldValue.serverTimestamp(),
+  },
+  {
+    UID: "o5ODZCeRK9uEwl6zKGJ4",
+    display_name: "Daniel Keane",
+    email: "",
+    phone: "",
+    photo_url: "",
+
+    // ORGANIZATION & ROLE
+    affiliation: "gop",
+    role: "chairman",
+
+    // LOCATION
+    county_code: "15",
+    county_name: "Chester County",
+    area_district: "15",
+    precincts: ["235"],
+
+    // PERMISSIONS (for UI)
+    can_export_csv: true,
+    can_view_phone: true,
+    can_view_full_address: true,
+    can_manage_team: true,
 
     // METADATA
     created_at: firebase.firestore.FieldValue.serverTimestamp(),

@@ -25,6 +25,7 @@ import {
   Menu as MenuIcon,
 } from "@mui/icons-material";
 import People from "@mui/icons-material/People";
+import HomeWork from "@mui/icons-material/HomeWork";
 
 const drawerWidth = 260;
 
@@ -49,6 +50,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { text: "Analysis", icon: <Analytics />, path: "/analysis" },
     { text: "Actions", icon: <Campaign />, path: "/actions" },
     { text: "Manage Team", icon: <People />, path: "/manage-team" }, 
+    { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
   ];
 
   const drawer = (
