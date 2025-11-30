@@ -8,7 +8,9 @@ import LoginPage from "./components/auth/LoginPage";
 import EnrollMFAScreen from "./components/auth/EnrollMFAScreen";
 import MainLayout from "./app/layout/MainLayout";
 import ReportsPage from "./app/reports/ReportsPage";
+import ActionsPage from "./app/actions/ActionsPage";
 import ManageTeamPage from "./app/admin/ManageTeamPage";
+import AnalysisPage from "./app/analysis/AnalysisPage";
 import MyPrecinctsPage from "./app/dashboard/MyPrecinctsPage";
 import VoterListPage from "./app/voters/VoterListPage";
 import WalkListPage from "./app/walk/WalkListPage";
@@ -70,9 +72,9 @@ export default function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route
               path="/analysis"
-              element={<div>Analysis – Coming Soon</div>}
+              element={<AnalysisPage />}
             />
-            <Route path="/actions" element={<div>Actions – Coming Soon</div>} />
+            <Route path="/actions" element={<ActionsPage />} />
             <Route path="*" element={<Navigate to="/reports" replace />} />
             <Route path="/manage-team" element={<ManageTeamPage />} />
             <Route path="/my-precincts" element={<MyPrecinctsPage />} />
