@@ -10,6 +10,8 @@ import MainLayout from "./app/layout/MainLayout";
 import ReportsPage from "./app/reports/ReportsPage";
 import ManageTeamPage from "./app/admin/ManageTeamPage";
 import MyPrecinctsPage from "./app/dashboard/MyPrecinctsPage";
+import VoterListPage from "./app/voters/VoterListPage";
+import WalkListPage from "./app/walk/WalkListPage";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
 export default function App() {
@@ -74,6 +76,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/reports" replace />} />
             <Route path="/manage-team" element={<ManageTeamPage />} />
             <Route path="/my-precincts" element={<MyPrecinctsPage />} />
+            <Route path="/voters" element={<VoterListPage />} />
+            <Route path="/walk-lists" element={<WalkListPage />} />
           </Routes>
         </MainLayout>
       );

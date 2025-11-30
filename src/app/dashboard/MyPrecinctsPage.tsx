@@ -1,14 +1,14 @@
-// src/app/dashboard/MyPrecinctsPage.tsx — FINAL & BEAUTIFUL
+// src/app/dashboard/MyPrecinctsPage.tsx — FINAL & WORKING
 import { useVoters } from "../../hooks/useVoters";
 import {
   Box,
   Typography,
   Paper,
+  Grid,
   Chip,
   Alert,
   Button,
 } from "@mui/material";
-import { Grid } from '@mui/material';
 import { BarChart } from "@mui/x-charts/BarChart";
 import { saveAs } from "file-saver";
 
@@ -47,7 +47,7 @@ export default function MyPrecinctsPage() {
       .map((row) => row.join(","))
       .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     saveAs(
       blob,
       `My_Precincts_Summary_${new Date().toISOString().slice(0, 10)}.csv`
@@ -72,7 +72,7 @@ export default function MyPrecinctsPage() {
       {!isLoading && !error && (
         <>
           <Grid container spacing={3} mb={4}>
-            <Grid xs={12} sm={6} md={3}>
+            <Grid>
               <Paper
                 sx={{
                   p: 3,
@@ -85,7 +85,8 @@ export default function MyPrecinctsPage() {
                 <Typography variant="h4">{stats.total_voters || 0}</Typography>
               </Paper>
             </Grid>
-            <Grid xs={12} sm={6} md={3}>
+
+            <Grid>
               <Paper
                 sx={{
                   p: 3,
@@ -98,7 +99,8 @@ export default function MyPrecinctsPage() {
                 <Typography variant="h4">{stats.republicans || 0}</Typography>
               </Paper>
             </Grid>
-            <Grid xs={12} sm={6} md={3}>
+
+            <Grid>
               <Paper
                 sx={{
                   p: 3,
@@ -118,7 +120,8 @@ export default function MyPrecinctsPage() {
                 />
               </Paper>
             </Grid>
-            <Grid xs={12} sm={6} md={3}>
+
+            <Grid>
               <Paper
                 sx={{
                   p: 3,
@@ -135,7 +138,7 @@ export default function MyPrecinctsPage() {
             </Grid>
           </Grid>
 
-          <Paper sx={{ p: 4, mb: 4 }}>
+          <Paper sx={{ p: 4 }}>
             <Box
               display="flex"
               justifyContent="space-between"
@@ -166,7 +169,7 @@ export default function MyPrecinctsPage() {
             />
           </Paper>
 
-          <Alert severity="success">
+          <Alert severity="success" sx={{ mt: 4 }}>
             Your precincts are fully secure — only you can see this data.
           </Alert>
         </>

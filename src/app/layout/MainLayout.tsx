@@ -26,6 +26,8 @@ import {
 } from "@mui/icons-material";
 import People from "@mui/icons-material/People";
 import HomeWork from "@mui/icons-material/HomeWork";
+import Phone from "@mui/icons-material/Phone";
+import DirectionsWalk from "@mui/icons-material/DirectionsWalk";
 
 const drawerWidth = 260;
 
@@ -49,8 +51,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { text: "Reports", icon: <BarChart />, path: "/reports" },
     { text: "Analysis", icon: <Analytics />, path: "/analysis" },
     { text: "Actions", icon: <Campaign />, path: "/actions" },
-    { text: "Manage Team", icon: <People />, path: "/manage-team" }, 
+    { text: "Manage Team", icon: <People />, path: "/manage-team" },
     { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
+    { text: "Voter List", icon: <Phone />, path: "/voters" },
+    { text: "Walk Lists", icon: <DirectionsWalk />, path: "/walk-lists" },
   ];
 
   const drawer = (
