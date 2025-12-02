@@ -1,14 +1,16 @@
-// src/app/analysis/AnalysisPage.tsx — FINAL & WORKING
+// src/app/analysis/AnalysisPage.tsx — FINAL WITH YOUR REAL SCHEMA
 import { useState } from "react";
 import {
   Box,
   Typography,
   Paper,
+  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Button,
+  Alert,
   Table,
   TableBody,
   TableCell,
@@ -16,185 +18,227 @@ import {
   TableHead,
   TableRow,
   Chip,
-  Alert,
 } from "@mui/material";
-import { Grid } from "@mui/material";
 import { useVoters } from "../../hooks/useVoters";
-import { BarChart } from "@mui/x-charts/BarChart";
 import { saveAs } from "file-saver";
 
-const INSIGHTS_SQL = `
-WITH recent AS (
-  SELECT 
-    DATE(Date_Registered) AS reg_date,
-    COUNT(*) AS new_regs,
-    COUNTIF(has_mail_ballot = true) AS mail_requests,
-    COUNTIF(mail_ballot_returned = true) AS mail_accepted,
-    COUNTIF(voted_2024_general = true) AS voted_2024,
-    COUNTIF(party = 'R' AND turnout_score_general < 70) AS weak_republicans,
-    COUNTIF(party NOT IN ('R','D') AND party IS NOT NULL) AS swing_voters
-  FROM \`groundgame26_voters.chester_county\`
-  WHERE Date_Registered >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-  GROUP BY reg_date
-)
-SELECT * FROM recent ORDER BY reg_date DESC
-`;
+const FILTERS = {
+  modeled_party: [
+    { value: "", label: "All Modeled Party" },
+    { value: "1", label: "1- Hard Republican" },
+    { value: "2", label: "2- Weak Republican" },
+    { value: "3", label: "3- Swing" },
+    { value: "4", label: "4- Weak Democrat" },
+    { value: "5", label: "5- Hard Democrat" },
+  ],
+  age_group: [
+    { value: "", label: "All Ages" },
+    { value: "18-25", label: "18-25 Young Adult Voters" },
+    { value: "26-40", label: "26-40 Young Families" },
+    { value: "41-70", label: "41-70 Established Voters" },
+    { value: "71+", label: "70+ Seniors/Elderly" },
+  ],
+  has_mail_ballot: [
+    { value: "", label: "All Mail Ballot" },
+    { value: "true", label: "Has Mail Ballot" },
+    { value: "false", label: "No Mail Ballot" },
+  ],
+  turnout_score_general: [
+    { value: "", label: "All Turnout" },
+    { value: "0", label: "0- Non-Voter" },
+    { value: "1", label: "1- Inactive Voter" },
+    { value: "2", label: "2- Intermittent" },
+    { value: "3", label: "3- Frequent Voter" },
+    { value: "4", label: "4- Active Voter" },
+  ],
+  voted_2024_general: [
+    { value: "", label: "All 2024 General" },
+    { value: "true", label: "Voted 2024 General" },
+    { value: "false", label: "Did NOT Vote 2024 General" },
+  ],
+};
 
 export default function AnalysisPage() {
-  const [dateRange, setDateRange] = useState("90");
-  const { data = [], isLoading, error } = useVoters(INSIGHTS_SQL);
+  const [filters, setFilters] = useState({
+    modeled_party: "",
+    age_group: "",
+    has_mail_ballot: "",
+    turnout_score_general: "",
+    voted_2024_general: "",
+  });
 
-  const exportAnalysis = () => {
-    if (!data || data.length === 0) {
-      alert("No data to export");
+  const FILTERED_LIST_SQL = `
+  SELECT
+    full_name,
+    age,
+    age_group,
+    party,
+    modeled_party,
+    precinct,
+    phone_mobile,
+    phone_home,
+    address,
+    has_mail_ballot,
+    turnout_score_general,
+    voted_2024_general
+  FROM \`groundgame26_voters.chester_county\`
+  WHERE (${filters.modeled_party === ""} OR modeled_party = '${
+    filters.modeled_party
+  }')
+    AND (${filters.age_group === ""} OR age_group = '${filters.age_group}')
+    AND (${filters.has_mail_ballot === ""} OR has_mail_ballot = ${
+    filters.has_mail_ballot === "true"
+  })
+    AND (${filters.turnout_score_general === ""} OR turnout_score_general = ${
+    filters.turnout_score_general
+  })
+    AND (${filters.voted_2024_general === ""} OR voted_2024_general = ${
+    filters.voted_2024_general === "true"
+  })
+  ORDER BY full_name
+  LIMIT 1000
+`;
+
+  const { data = [], isLoading, error } = useVoters(FILTERED_LIST_SQL);
+
+  const exportList = () => {
+    if (!data.length) {
+      alert("No voters match your filters");
       return;
     }
 
-    const headers = [
-      "Date",
-      "New Registrations",
-      "Mail Requests",
-      "Mail Accepted",
-      "Voted 2024",
-      "Weak Republicans",
-      "Swing Voters",
-    ];
-
-    const rows = data.map((row: any) => [
-      row.reg_date || "",
-      row.new_regs || 0,
-      row.mail_requests || 0,
-      row.mail_accepted || 0,
-      row.voted_2024 || 0,
-      row.weak_republicans || 0,
-      row.swing_voters || 0,
-    ]);
-
-    const csvContent = [headers, ...rows]
+    const csv = [
+      [
+        "Name",
+        "Age",
+        "Age Group",
+        "Party",
+        "Modeled Party",
+        "Precinct",
+        "Phone",
+        "Address",
+        "Mail Ballot",
+        "Turnout Score",
+        "Voted 2024",
+      ],
+      ...data.map((v: any) => [
+        v.full_name || "",
+        v.age || "",
+        v.age_group || "",
+        v.party || "",
+        v.modeled_party || "",
+        v.precinct || "",
+        v.phone_mobile || v.phone_home || "",
+        v.address || "",
+        v.has_mail_ballot ? "Yes" : "No",
+        v.turnout_score_general || "",
+        v.voted_2024_general ? "Yes" : "No",
+      ]),
+    ]
       .map((row) => row.join(","))
       .join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     saveAs(
-      blob,
-      `Chester_County_Analysis_${new Date().toISOString().slice(0, 10)}.csv`
+      new Blob([csv], { type: "text/csv" }),
+      `Targeted_Voters_${new Date().toISOString().slice(0, 10)}.csv`
     );
   };
 
   return (
     <Box p={4}>
       <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
-        Analysis — Dynamic Voter Intelligence
+        Analysis — Voter Targeting Engine
       </Typography>
 
-      <Grid>
-        <Grid>
-          <FormControl fullWidth>
-            <InputLabel>Date Range</InputLabel>
-            <Select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-            >
-              <MenuItem value="30">Last 30 Days</MenuItem>
-              <MenuItem value="90">Last 90 Days</MenuItem>
-              <MenuItem value="180">Last 6 Months</MenuItem>
-            </Select>
-          </FormControl>
+      <Paper sx={{ p: 4, mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Target Your Voters
+        </Typography>
+
+        <Grid spacing={2}>
+          {Object.entries(FILTERS).map(([key, options]) => (
+            <Grid key={key}>
+              <FormControl fullWidth>
+                <InputLabel>
+                  {key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                </InputLabel>
+                <Select
+                  value={filters[key as keyof typeof filters]}
+                  onChange={(e) =>
+                    setFilters({ ...filters, [key]: e.target.value })
+                  }
+                >
+                  {options.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          ))}
         </Grid>
-        <Grid display="flex" gap={2} alignItems="center">
-          <Button variant="contained" onClick={exportAnalysis}>
-            Export Analysis CSV
+
+        <Box mt={4}>
+          <Button
+            variant="contained"
+            size="large"
+            color="primary"
+            onClick={exportList}
+          >
+            Download Targeted List ({data.length} voters)
           </Button>
-          <Button variant="outlined">Generate Walk List</Button>
-          <Button variant="outlined" color="secondary">
-            Phone Bank Mode
-          </Button>
-        </Grid>
-      </Grid>
+        </Box>
+      </Paper>
 
       {isLoading && (
-        <Alert severity="info">
-          Loading real-time analysis from BigQuery...
-        </Alert>
+        <Alert severity="info">Loading your targeted voters...</Alert>
       )}
       {error && (
         <Alert severity="error">Error: {(error as Error).message}</Alert>
       )}
+      {!isLoading && !error && data.length === 0 && (
+        <Alert severity="warning">
+          No voters match your filters — try broadening them
+        </Alert>
+      )}
 
-      <Grid>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            New Registrations
-          </Typography>
-          <BarChart
-            dataset={data}
-            xAxis={[{ scaleType: "band", dataKey: "reg_date" }]}
-            series={[
-              { dataKey: "new_regs", label: "New Voters", color: "#d32f2f" },
-            ]}
-            height={300}
-          />
-        </Paper>
-      </Grid>
-
-      <Grid>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Mail-in Ballot Activity
-          </Typography>
-          <BarChart
-            dataset={data}
-            xAxis={[{ scaleType: "band", dataKey: "reg_date" }]}
-            series={[
-              {
-                dataKey: "mail_requests",
-                label: "Requested",
-                color: "#1976d2",
-              },
-              {
-                dataKey: "mail_accepted",
-                label: "Returned",
-                color: "#388e3c",
-              },
-            ]}
-            height={300}
-          />
-        </Paper>
-      </Grid>
-
-      <Grid>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Weak Republicans & Swing Voters
-          </Typography>
+      {!isLoading && !error && data.length > 0 && (
+        <Paper>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell align="right">Weak R</TableCell>
-                  <TableCell align="right">Swing</TableCell>
-                  <TableCell>Hotspot?</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Age</TableCell>
+                  <TableCell>Party</TableCell>
+                  <TableCell>Modeled</TableCell>
+                  <TableCell>Precinct</TableCell>
+                  <TableCell>Phone</TableCell>
+                  <TableCell>Mail Ballot</TableCell>
+                  <TableCell>Turnout</TableCell>
+                  <TableCell>2024 Vote</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {data.slice(0, 15).map((row: any, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell>{row.reg_date}</TableCell>
-                    <TableCell align="right">
-                      <Chip label={row.weak_republicans} color="error" />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Chip label={row.swing_voters} color="warning" />
+                {data.slice(0, 50).map((voter: any, i: number) => (
+                  <TableRow key={i}>
+                    <TableCell>{voter.full_name}</TableCell>
+                    <TableCell>{voter.age}</TableCell>
+                    <TableCell>{voter.party}</TableCell>
+                    <TableCell>{voter.modeled_party}</TableCell>
+                    <TableCell>{voter.precinct}</TableCell>
+                    <TableCell>
+                      {voter.phone_mobile || voter.phone_home || "—"}
                     </TableCell>
                     <TableCell>
-                      {row.weak_republicans > 12 && (
-                        <Chip
-                          label="HOTSPOT"
-                          color="error"
-                          variant="outlined"
-                        />
-                      )}
+                      {voter.has_mail_ballot ? "Yes" : "No"}
+                    </TableCell>
+                    <TableCell>{voter.turnout_score_general}</TableCell>
+                    <TableCell>
+                      {voter.voted_2024_general ? "Yes" : "No"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -202,12 +246,7 @@ export default function AnalysisPage() {
             </Table>
           </TableContainer>
         </Paper>
-      </Grid>
-
-      <Alert severity="success" sx={{ mt: 4 }}>
-        AI Insight: Area 15 showing surge in weak Republicans — prioritize
-        door-knocking!
-      </Alert>
+      )}
     </Box>
   );
 }
