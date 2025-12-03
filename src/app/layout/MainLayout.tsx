@@ -1,6 +1,6 @@
-// src/app/layout/MainLayout.tsx
+// src/app/layout/MainLayout.tsx — FINAL: Clean & Professional Active State
 import { useState, useEffect, ReactNode } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import {
@@ -23,11 +23,12 @@ import {
   Campaign,
   Logout,
   Menu as MenuIcon,
+  People,
+  HomeWork,
+  Phone,
+  DirectionsWalk,
+  LocationOn, // ← FILLED map pin (replaces Map)
 } from "@mui/icons-material";
-import People from "@mui/icons-material/People";
-import HomeWork from "@mui/icons-material/HomeWork";
-import Phone from "@mui/icons-material/Phone";
-import DirectionsWalk from "@mui/icons-material/DirectionsWalk";
 
 const drawerWidth = 260;
 
@@ -39,6 +40,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width:1200px)");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -49,6 +51,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const menuItems = [
     { text: "Reports", icon: <BarChart />, path: "/reports" },
+    { text: "Interactive Map", icon: <LocationOn />, path: "/maps" }, // ← Filled icon
     { text: "Analysis", icon: <Analytics />, path: "/analysis" },
     { text: "Actions", icon: <Campaign />, path: "/actions" },
     { text: "Manage Team", icon: <People />, path: "/manage-team" },
@@ -65,14 +68,48 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </Typography>
       </Toolbar>
       <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton onClick={() => navigate(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {menuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+
+          return (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                onClick={() => navigate(item.path)}
+                sx={{
+                  borderLeft: isActive ? 4 : 0,
+                  borderColor: "#d32f2f",
+                  pl: isActive ? 2.5 : 3,
+                  backgroundColor: isActive
+                    ? "rgba(211, 47, 47, 0.05)"
+                    : "transparent",
+                  "&:hover": {
+                    backgroundColor: "rgba(211, 47, 47, 0.08)",
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color: isActive ? "#d32f2f" : "inherit",
+                    minWidth: 40,
+                  }}
+                >
+                  {isActive && item.text === "Interactive Map" ? (
+                    <LocationOn color="error" /> // Filled + red when active
+                  ) : (
+                    item.icon
+                  )}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontWeight: isActive ? "bold" : "medium",
+                    color: isActive ? "#d32f2f" : "inherit",
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
         <ListItem disablePadding>
           <ListItemButton onClick={() => signOut(auth)}>
             <ListItemIcon>
@@ -87,7 +124,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <Box sx={{ display: "flex" }}>
-      {/* Desktop permanent drawer */}
+      {/* Desktop drawer */}
       {isDesktop ? (
         <Drawer
           variant="permanent"
@@ -114,7 +151,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </Drawer>
       )}
 
-      {/* Main content area */}
+      {/* Main content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         {!isDesktop && (
           <AppBar position="fixed" sx={{ bgcolor: "#d32f2f" }}>
@@ -128,11 +165,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </Toolbar>
           </AppBar>
         )}
-        <Toolbar /> {/* Spacer for mobile app bar */}
-        <Box p={3}>
-          {/* This is where page content goes */}
-          {children || <Outlet />}
-        </Box>
+        <Toolbar />
+        <Box p={3}>{children || <Outlet />}</Box>
       </Box>
     </Box>
   );
