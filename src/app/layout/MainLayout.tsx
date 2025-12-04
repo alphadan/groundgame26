@@ -23,11 +23,10 @@ import {
   Campaign,
   Logout,
   Menu as MenuIcon,
-  People,
   HomeWork,
   Phone,
   DirectionsWalk,
-  LocationOn, // ← FILLED map pin (replaces Map)
+  LocationOn,
 } from "@mui/icons-material";
 
 const drawerWidth = 260;
@@ -54,7 +53,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { text: "Interactive Map", icon: <LocationOn />, path: "/maps" }, // ← Filled icon
     { text: "Analysis", icon: <Analytics />, path: "/analysis" },
     { text: "Actions", icon: <Campaign />, path: "/actions" },
-    { text: "Manage Team", icon: <People />, path: "/manage-team" },
     { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
     { text: "Voter List", icon: <Phone />, path: "/voters" },
     { text: "Walk Lists", icon: <DirectionsWalk />, path: "/walk-lists" },

@@ -11,8 +11,7 @@ import MainLayout from "./app/layout/MainLayout";
 
 import ReportsPage from "./app/reports/ReportsPage";
 import ActionsPage from "./app/actions/ActionsPage";
-import MapsPage from "./app/maps/MapsPage"; // ← Already imported
-import ManageTeamPage from "./app/admin/ManageTeamPage";
+import MapsPage from "./app/maps/MapsPage";
 import AnalysisPage from "./app/analysis/AnalysisPage";
 import MyPrecinctsPage from "./app/dashboard/MyPrecinctsPage";
 import VoterListPage from "./app/voters/VoterListPage";
@@ -85,7 +84,6 @@ export default function App() {
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/actions" element={<ActionsPage />} />
         {/* Admin / User Pages */}
-        <Route path="/manage-team" element={<ManageTeamPage />} />
         <Route path="/my-precincts" element={<MyPrecinctsPage />} />
         <Route path="/voters" element={<VoterListPage />} />
         <Route path="/walk-lists" element={<WalkListPage />} />
