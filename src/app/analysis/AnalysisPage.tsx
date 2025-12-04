@@ -185,7 +185,7 @@ export default function AnalysisPage() {
         </Alert>
       </Box>
       <Box p={4}>
-        <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
+        <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
           Analysis — Voter Targeting Engine
         </Typography>
 
@@ -225,7 +225,7 @@ export default function AnalysisPage() {
             <Button
               variant="contained"
               size="large"
-              color="primary"
+              sx={{ bgcolor: "#B22234" }}
               onClick={handleSubmit}
             >
               Run Analysis

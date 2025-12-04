@@ -49,24 +49,40 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [navigate]);
 
   const menuItems = [
+    { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
     { text: "Reports", icon: <BarChart />, path: "/reports" },
-    { text: "Interactive Map", icon: <LocationOn />, path: "/maps" }, // ← Filled icon
     { text: "Analysis", icon: <Analytics />, path: "/analysis" },
     { text: "Actions", icon: <Campaign />, path: "/actions" },
-    { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
+    { divider: true },
     { text: "Voter List", icon: <Phone />, path: "/voters" },
     { text: "Walk Lists", icon: <DirectionsWalk />, path: "/walk-lists" },
+    { divider: true },
+    { text: "Interactive Map", icon: <LocationOn />, path: "/maps" },
   ];
 
   const drawer = (
     <Box>
       <Toolbar>
-        <Typography variant="h6" color="#d32f2f" fontWeight="bold">
+        <Typography variant="h6" color="#B22234" fontWeight="bold">
           groundgame26
         </Typography>
       </Toolbar>
       <List>
-        {menuItems.map((item) => {
+        {menuItems.map((item, index) => {
+          if ("divider" in item) {
+            return (
+              <Box
+                key={`divider-${index}`}
+                sx={{
+                  my: 2,
+                  mx: 2,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                }}
+              />
+            );
+          }
+
           const isActive = location.pathname === item.path;
 
           return (
@@ -75,24 +91,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 onClick={() => navigate(item.path)}
                 sx={{
                   borderLeft: isActive ? 4 : 0,
-                  borderColor: "#d32f2f",
+                  borderColor: "#B22234",
                   pl: isActive ? 2.5 : 3,
                   backgroundColor: isActive
                     ? "rgba(211, 47, 47, 0.05)"
                     : "transparent",
-                  "&:hover": {
-                    backgroundColor: "rgba(211, 47, 47, 0.08)",
-                  },
+                  "&:hover": { backgroundColor: "rgba(211, 47, 47, 0.08)" },
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: isActive ? "#d32f2f" : "inherit",
+                    color: isActive ? "#B22234" : "inherit",
                     minWidth: 40,
                   }}
                 >
                   {isActive && item.text === "Interactive Map" ? (
-                    <LocationOn color="error" /> // Filled + red when active
+                    <LocationOn color="error" />
                   ) : (
                     item.icon
                   )}
@@ -101,13 +115,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontWeight: isActive ? "bold" : "medium",
-                    color: isActive ? "#d32f2f" : "inherit",
+                    color: isActive ? "#B22234" : "inherit",
                   }}
                 />
               </ListItemButton>
             </ListItem>
           );
         })}
+
+        {/* Log Out */}
         <ListItem disablePadding>
           <ListItemButton onClick={() => signOut(auth)}>
             <ListItemIcon>
@@ -152,7 +168,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       {/* Main content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         {!isDesktop && (
-          <AppBar position="fixed" sx={{ bgcolor: "#d32f2f" }}>
+          <AppBar position="fixed" sx={{ bgcolor: "#B22234" }}>
             <Toolbar>
               <IconButton color="inherit" onClick={() => setMobileOpen(true)}>
                 <MenuIcon />

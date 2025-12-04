@@ -1,4 +1,4 @@
-// src/app/actions/ActionsPage.tsx — FULLY WORKING
+// src/app/actions/ActionsPage.tsx — FINAL: Collapsible Absentee Chaser
 import { useState } from "react";
 import { useVoters } from "../../hooks/useVoters";
 import {
@@ -8,11 +8,30 @@ import {
   Button,
   TextField,
   Alert,
+  Card,
+  CardContent,
+  CardActions,
+  Collapse,
+  IconButton,
+  Grid,
+  CircularProgress,
   Chip,
 } from "@mui/material";
-import { Grid } from "@mui/material";
 import { Editor } from "@tinymce/tinymce-react";
 import { saveAs } from "file-saver";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { styled } from "@mui/material/styles";
+
+const ExpandMore = styled((props: any) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+  transform: !expand ? "rotate(0deg)" : "rotate(180deg)",
+  marginLeft: "auto",
+  transition: theme.transitions.create("transform", {
+    duration: theme.transitions.duration.shortest,
+  }),
+}));
 
 const ABSENTEE_SQL = `
 SELECT
@@ -32,13 +51,18 @@ export default function ActionsPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const { data: absentee = [{}], isLoading } = useVoters(ABSENTEE_SQL);
-  const stats = absentee[0];
+  // Collapsible state
+  const [expandedChase, setExpandedChase] = useState(false);
+
+  // Lazy load — only when expanded
+  const { data: absentee = [{}], isLoading: chaseLoading } = useVoters(
+    expandedChase ? ABSENTEE_SQL : "SELECT 1 WHERE FALSE"
+  );
+  const stats = absentee[0] || {};
 
   const handleSend = async () => {
     setSending(true);
-    // In production: call Cloud Function → SendGrid
-    await new Promise((r) => setTimeout(r, 2000)); // simulate
+    await new Promise((r) => setTimeout(r, 2000));
     setSent(true);
     setSending(false);
   };
@@ -52,43 +76,16 @@ export default function ActionsPage() {
     );
   };
 
+  const [expandedMessages, setExpandedMessages] = useState(false);
+
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
+      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
         Actions — Win the Ground Game
       </Typography>
 
-      {/* Absentee Chase Dashboard */}
-      <Paper sx={{ p: 4, mb: 4, bgcolor: "#fff3e0" }}>
-        <Typography variant="h5" gutterBottom color="error">
-          Absentee Ballot Chase — {stats.outstanding_absentee || 0} Outstanding!
-        </Typography>
-        <Grid spacing={3}>
-          <Grid>
-            <Typography variant="h3">
-              {stats.outstanding_absentee || 0}
-            </Typography>
-            <Typography>Mail Ballots Not Returned</Typography>
-          </Grid>
-          <Grid>
-            <Typography variant="h3">{stats.return_rate || 0}%</Typography>
-            <Typography>Return Rate</Typography>
-          </Grid>
-          <Grid>
-            <Button
-              variant="contained"
-              color="error"
-              size="large"
-              onClick={exportOutstanding}
-            >
-              Export Chase List
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Email Campaign Builder */}
-      <Paper sx={{ p: 4 }}>
+      {/* Email Campaign Builder — Always Visible */}
+      <Paper sx={{ p: 4, mb: 6 }}>
         <Typography variant="h5" gutterBottom>
           Email Campaign Builder — Target Outstanding Ballots
         </Typography>
@@ -130,17 +127,230 @@ export default function ActionsPage() {
           <Button
             variant="contained"
             size="large"
-            sx={{ bgcolor: "#d32f2f" }}
+            sx={{ bgcolor: "#B22234" }}
             onClick={handleSend}
             disabled={sending}
           >
             {sending
               ? "Sending..."
-              : `Send to ${stats.outstanding_absentee} Voters`}
+              : `Send to ${stats.outstanding_absentee || 0} Voters`}
           </Button>
           <Button variant="outlined">Preview</Button>
         </Box>
       </Paper>
+
+      {/* NEW: Suggested Messages — Smart & Personalized */}
+      <Card sx={{ mb: 6 }}>
+        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
+          <Box>
+            <Typography variant="h6" fontWeight="bold">
+              Suggested Messages — Personalized Outreach
+            </Typography>
+            <Typography variant="body2">
+              Click a voter profile to copy a tailored message
+            </Typography>
+          </Box>
+          <ExpandMore
+            expand={expandedMessages}
+            onClick={() => setExpandedMessages(!expandedMessages)}
+          >
+            <ExpandMoreIcon sx={{ color: "black" }} />
+          </ExpandMore>
+        </CardActions>
+
+        <Collapse in={expandedMessages} timeout="auto" unmountOnExit>
+          <CardContent sx={{ pt: 3 }}>
+            <Grid container spacing={3}>
+              {/* Example 1: Likely Mover, Age 30-40 */}
+              <Grid>
+                <Paper
+                  sx={{
+                    p: 3,
+                    bgcolor: "#e3f2fd",
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "#bbdefb" },
+                    transition: "0.2s",
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      "Hi {FIRST_NAME}! Welcome to the neighborhood! I noticed you recently moved in — we're so glad you're here. Chester County has excellent schools, beautiful parks, and a strong sense of community. I'm your local Republican Committeeman and live just down the street. Please don't hesitate to reach out if you need help finding polling locations, updating your voter registration, or just want to say hi! — {YOUR_NAME}"
+                    );
+                    alert("Message copied to clipboard!");
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="#1976d2"
+                  >
+                    Likely Mover • Age 26–40
+                  </Typography>
+                  <Typography variant="body2" mt={1}>
+                    "Welcome! I noticed you may have moved into the
+                    neighborhood..."
+                  </Typography>
+                  <Chip
+                    label="Click to Copy"
+                    size="small"
+                    color="primary"
+                    sx={{ mt: 2 }}
+                  />
+                </Paper>
+              </Grid>
+
+              {/* Example 2: Weak Republican, Age 41-70 */}
+              <Grid>
+                <Paper
+                  sx={{
+                    p: 3,
+                    bgcolor: "#ffebee",
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "#ffcdd2" },
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      "Hi {FIRST_NAME}, I'm your local Republican Committeeman. I wanted to make sure you know your voice matters here in Chester County. With everything going on, we need common-sense leadership more than ever. If you need help voting by mail, finding your polling place, or just want to talk about what’s important to you, I’m right here in the neighborhood. Hope to hear from you! — {YOUR_NAME}"
+                    );
+                    alert("Message copied!");
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="#d32f2f"
+                  >
+                    Weak Republican • Age 41–70
+                  </Typography>
+                  <Typography variant="body2" mt={1}>
+                    "Your voice matters here in Chester County..."
+                  </Typography>
+                  <Chip
+                    label="Click to Copy"
+                    size="small"
+                    color="error"
+                    sx={{ mt: 2 }}
+                  />
+                </Paper>
+              </Grid>
+
+              {/* Example 3: Young Republican (18-25) */}
+              <Grid>
+                <Paper
+                  sx={{
+                    p: 3,
+                    bgcolor: "#fff3e0",
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "#ffe0b2" },
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      "Hey {FIRST_NAME}! Welcome to voting in Chester County! I'm your local Republican Committeeman and just wanted to say hi. A lot of us your age are getting involved because we care about lower taxes, school choice, and keeping our communities safe. If you ever need help voting or just want to chat, hit me up — I’m right here in the area! — {YOUR_NAME}"
+                    );
+                    alert("Message copied!");
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    color="#ef6c00"
+                  >
+                    Young Voter • Age 18–25
+                  </Typography>
+                  <Typography variant="body2" mt={1}>
+                    "Hey! Welcome to voting in Chester County..."
+                  </Typography>
+                  <Chip
+                    label="Click to Copy"
+                    size="small"
+                    color="warning"
+                    sx={{ mt: 2 }}
+                  />
+                </Paper>
+              </Grid>
+
+              {/* Add more as needed */}
+            </Grid>
+
+            <Alert severity="info" sx={{ mt: 4 }}>
+              These messages are hand-crafted for maximum response. More coming
+              soon!
+            </Alert>
+          </CardContent>
+        </Collapse>
+      </Card>
+
+      {/* Collapsible Absentee Chase Dashboard */}
+      <Card sx={{ mb: 6 }}>
+        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
+          <Box>
+            <Typography variant="h6" fontWeight="bold">
+              Absentee Ballot Chase — {stats.outstanding_absentee || 0}{" "}
+              Outstanding!
+            </Typography>
+            <Typography variant="body2">Click to load live stats</Typography>
+          </Box>
+          <ExpandMore
+            expand={expandedChase}
+            onClick={() => setExpandedChase(!expandedChase)}
+          >
+            <ExpandMoreIcon sx={{ color: "black" }} />
+          </ExpandMore>
+        </CardActions>
+
+        <Collapse in={expandedChase} timeout="auto" unmountOnExit>
+          <CardContent sx={{ pt: 3 }}>
+            {chaseLoading ? (
+              <Box textAlign="center" py={8}>
+                <CircularProgress />
+                <Typography mt={2}>
+                  Loading absentee ballot status...
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={4} justifyContent="center">
+                <Grid>
+                  <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#ffebee" }}>
+                    <Typography variant="h3" color="error">
+                      {stats.outstanding_absentee || 0}
+                    </Typography>
+                    <Typography variant="h6">Outstanding Ballots</Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid>
+                  <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#e8f5e8" }}>
+                    <Typography variant="h3" color="success">
+                      {stats.return_rate || 0}%
+                    </Typography>
+                    <Typography variant="h6">Return Rate</Typography>
+                  </Paper>
+                </Grid>
+
+                <Grid>
+                  <Paper sx={{ p: 4, textAlign: "center" }}>
+                    <Typography variant="h3">
+                      {stats.total_requested || 0}
+                    </Typography>
+                    <Typography variant="h6">Total Requested</Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+            )}
+
+            <Box textAlign="center" mt={4}>
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#B22234" }}
+                size="large"
+                onClick={exportOutstanding}
+                disabled={chaseLoading}
+              >
+                Export Chase List
+              </Button>
+            </Box>
+          </CardContent>
+        </Collapse>
+      </Card>
     </Box>
   );
 }

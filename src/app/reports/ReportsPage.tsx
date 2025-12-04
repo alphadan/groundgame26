@@ -219,7 +219,7 @@ export default function ReportsPage() {
 
   return (
     <Box p={3}>
-      <Typography variant="h4" gutterBottom fontWeight="bold" color="#d32f2f">
+      <Typography variant="h4" gutterBottom fontWeight="bold" color="#B22234">
         Chester County — LIVE Voter Intelligence
       </Typography>
 
@@ -256,7 +256,7 @@ export default function ReportsPage() {
 
       {/* Collapsible: Only loads when opened */}
       <Card sx={{ mb: 6, boxShadow: 3, borderRadius: 2 }}>
-        <CardActions disableSpacing sx={{ bgcolor: "#d32f2f", color: "white" }}>
+        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">
               Weak Republicans Who Haven't Voted 2024
@@ -271,7 +271,7 @@ export default function ReportsPage() {
             aria-expanded={expanded}
             aria-label="show report"
           >
-            <ExpandMoreIcon sx={{ color: "white" }} />
+            <ExpandMoreIcon sx={{ color: "black" }} />
           </ExpandMore>
         </CardActions>
 
@@ -291,7 +291,7 @@ export default function ReportsPage() {
                 <Typography
                   variant="h4"
                   align="center"
-                  color="#d32f2f"
+                  color="#B22234"
                   fontWeight="bold"
                   mb={3}
                 >
@@ -341,7 +341,7 @@ export default function ReportsPage() {
       </Card>
       {/* NEW: Likely Movers by Age + Party */}
       <Card sx={{ mb: 6, boxShadow: 3, borderRadius: 2 }}>
-        <CardActions disableSpacing sx={{ bgcolor: "#1976d2", color: "white" }}>
+        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">
               Likely Movers by Age Group (R / D / NF)
@@ -356,7 +356,7 @@ export default function ReportsPage() {
             aria-expanded={expandedMovers}
             aria-label="show movers report"
           >
-            <ExpandMoreIcon sx={{ color: "white" }} />
+            <ExpandMoreIcon sx={{ color: "black" }} />
           </ExpandMore>
         </CardActions>
 
@@ -427,7 +427,7 @@ export default function ReportsPage() {
       </Card>
       {/* NEW: New Registrants Since 2025 */}
       <Card sx={{ mb: 6, boxShadow: 3, borderRadius: 2 }}>
-        <CardActions disableSpacing sx={{ bgcolor: "#1565c0", color: "white" }}>
+        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">
               New Registrants Since Jan 1, 2025
@@ -442,7 +442,7 @@ export default function ReportsPage() {
             aria-expanded={expandedNewRegs}
             aria-label="show new registrants"
           >
-            <ExpandMoreIcon sx={{ color: "white" }} />
+            <ExpandMoreIcon sx={{ color: "black" }} />
           </ExpandMore>
         </CardActions>
 
