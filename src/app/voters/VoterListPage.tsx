@@ -1,4 +1,4 @@
-// src/app/voters/VoterListPage.tsx — FINAL & PERFECT
+// src/app/voters/VoterListPage.tsx — FINAL & 100% WORKING WITH voter_id
 import { useVoters } from "../../hooks/useVoters";
 import {
   Box,
@@ -20,10 +20,34 @@ import {
   Select,
   MenuItem,
   Grid,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Avatar,
+  Collapse,
 } from "@mui/material";
-import { Phone, Message } from "@mui/icons-material";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import { useState } from "react";
+import {
+  Phone,
+  Message,
+  MailOutline,
+  AddComment,
+  ExpandLess,
+  ExpandMore,
+} from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  Unsubscribe,
+} from "firebase/firestore";
+import { db, auth } from "../../lib/firebase";
 
 const PRECINCTS = [
   { value: "", label: "All Precincts" },
@@ -41,13 +65,25 @@ const PRECINCTS = [
 
 export default function VoterListPage() {
   const [selectedPrecinct, setSelectedPrecinct] = useState("");
+  const [submitted, setSubmitted] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
 
-  // Dynamic query based on precinct filter
-  const VOTER_LIST_SQL = selectedPrecinct
-    ? `
+  // Note-taking state
+  const [openNote, setOpenNote] = useState(false);
+  const [selectedVoter, setSelectedVoter] = useState<any>(null);
+  const [noteText, setNoteText] = useState("");
+  const [voterNotes, setVoterNotes] = useState<Record<string, any[]>>({});
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  // Dynamic query — includes voter_id
+  const VOTER_LIST_SQL =
+    selectedPrecinct && selectedPrecinct
+      ? `
     SELECT
+      voter_id,
       full_name,
       age,
       gender,
@@ -64,14 +100,16 @@ export default function VoterListPage() {
     ORDER BY turnout_score_general DESC
     LIMIT 1000
   `
-    : `
+      : `
     SELECT
+      voter_id,
       full_name,
       age,
       gender,
       party,
       phone_home,
       phone_mobile,
+      email,
       address,
       turnout_score_general,
       mail_ballot_returned,
@@ -84,24 +122,79 @@ export default function VoterListPage() {
 
   const { data = [], isLoading, error } = useVoters(VOTER_LIST_SQL);
 
-  const handleChangePage = (event: unknown, newPage: number) =>
-    setPage(newPage);
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleGenerateList = () => {
+    if (!selectedPrecinct) {
+      alert("Please select a precinct first");
+      return;
+    }
+    setSubmitted(true);
     setPage(0);
+  };
+
+  // Call & Text functions
+  const call = (phone: string) =>
+    window.open(`tel:${phone.replace(/\D/g, "")}`);
+  const text = (phone: string) =>
+    window.open(`sms:${phone.replace(/\D/g, "")}`);
+
+  // Real-time notes using voter_id
+  useEffect(() => {
+    if (!data.length) return;
+    if (!paginatedData.length) return;
+
+    const unsubscribes: Unsubscribe[] = data.map((voter: any) => {
+      if (!voter.voter_id) return () => {};
+
+      const q = query(
+        collection(db, "voter_notes"),
+        where("voter_id", "==", voter.voter_id),
+        orderBy("created_at", "desc")
+      );
+
+      return onSnapshot(q, (snapshot) => {
+        const notes = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setVoterNotes((prev) => ({ ...prev, [voter.voter_id]: notes }));
+      });
+    });
+
+    return () => unsubscribes.forEach((unsub) => unsub?.());
+  }, [data]);
+
+  const handleAddNote = async () => {
+    if (!noteText.trim() || !selectedVoter || !auth.currentUser) return;
+
+    try {
+      console.log("Saving note for voter_id:", selectedVoter.voter_id);
+
+      await addDoc(collection(db, "voter_notes"), {
+        voter_id: selectedVoter.voter_id,
+        full_name: selectedVoter.full_name,
+        address: selectedVoter.address,
+        note: noteText,
+        created_by_uid: auth.currentUser.uid,
+        created_by_name:
+          auth.currentUser.displayName ||
+          auth.currentUser.email?.split("@")[0] ||
+          "User",
+        created_at: new Date(),
+      });
+
+      console.log("Note saved to Firestore!");
+      setNoteText("");
+      setOpenNote(false);
+    } catch (err) {
+      console.error("Failed to save note", err);
+      alert("Failed to save note");
+    }
   };
 
   const paginatedData = data.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
-
-  const call = (phone: string) =>
-    window.open(`tel:${phone.replace(/\D/g, "")}`);
-  const text = (phone: string) =>
-    window.open(`sms:${phone.replace(/\D/g, "")}`);
 
   return (
     <Box p={4}>
@@ -111,6 +204,9 @@ export default function VoterListPage() {
 
       {/* PRECINCT FILTER */}
       <Paper sx={{ p: 3, mb: 4, bgcolor: "#f5f5f5" }}>
+        <Typography variant="h6" gutterBottom color="#0A3161">
+          Select Precinct to Load Voter List
+        </Typography>
         <Grid container spacing={2} alignItems="center">
           <Grid>
             <FormControl fullWidth size="small" sx={{ minWidth: 300 }}>
@@ -147,24 +243,47 @@ export default function VoterListPage() {
             </FormControl>
           </Grid>
           <Grid>
-            <Typography variant="body2" color="text.secondary">
-              {selectedPrecinct
-                ? `${data.length.toLocaleString()} voters in precinct ${selectedPrecinct}`
-                : `${data.length.toLocaleString()} total voters`}
-            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              sx={{
+                bgcolor: selectedPrecinct ? "#0A3161" : "#cccccc",
+                "&:hover": {
+                  bgcolor: selectedPrecinct ? "#0d47a1" : "#cccccc",
+                },
+                px: 6,
+              }}
+              onClick={handleGenerateList}
+              disabled={!selectedPrecinct || isLoading}
+            >
+              {isLoading ? "Loading..." : "Generate List"}
+            </Button>
           </Grid>
         </Grid>
+        {!selectedPrecinct && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Select a precinct above to load voters
+          </Typography>
+        )}
       </Paper>
 
-      {isLoading && (
+      {submitted && isLoading && (
         <Box textAlign="center" py={8}>
           <CircularProgress />
-          <Typography mt={2}>Loading voters...</Typography>
+          <Typography mt={2}>
+            Loading voters for precinct {selectedPrecinct}...
+          </Typography>
         </Box>
       )}
-      {error && <Alert severity="error">{(error as Error).message}</Alert>}
+      {error && <Alert severity="error">Error loading data. Try again.</Alert>}
 
-      {!isLoading && !error && (
+      {submitted && !isLoading && !error && data.length === 0 && (
+        <Alert severity="info">
+          No voters found in precinct {selectedPrecinct}.
+        </Alert>
+      )}
+
+      {submitted && !isLoading && !error && data.length > 0 && (
         <Paper>
           <Box
             p={3}
@@ -174,9 +293,6 @@ export default function VoterListPage() {
           >
             <Typography variant="h6">
               {data.length.toLocaleString()} Total Voters
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Showing {paginatedData.length} per page
             </Typography>
           </Box>
 
@@ -208,78 +324,175 @@ export default function VoterListPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedData.map((voter: any, index: number) => (
-                  <TableRow key={index} hover>
-                    <TableCell>{voter.full_name || "—"}</TableCell>
-                    <TableCell>{voter.age || "—"}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={voter.party || "—"}
-                        color={
-                          voter.party === "R"
-                            ? "error"
-                            : voter.party === "D"
-                            ? "primary"
-                            : "default"
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {voter.phone_mobile || voter.phone_home || "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={voter.turnout_score_general || 0}
-                        color="success"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {voter.mail_ballot_returned ? "Yes" : "No"}
-                    </TableCell>
-                    <TableCell>
-                      {(voter.phone_mobile || voter.phone_home) && (
-                        <>
-                          <Button
-                            size="small"
-                            startIcon={<Phone />}
-                            onClick={() =>
-                              call(voter.phone_mobile || voter.phone_home!)
-                            }
-                            sx={{ mr: 1 }}
-                          >
-                            Call
-                          </Button>
-                          <Button
-                            size="small"
-                            startIcon={<Message />}
-                            onClick={() =>
-                              text(voter.phone_mobile || voter.phone_home!)
-                            }
-                          >
-                            Text
-                          </Button>
-                        </>
-                      )}
-                      {voter.email && (
-                        <Button
+                {paginatedData.map((voter: any) => {
+                  const notes = voterNotes[voter.voter_id] || [];
+
+                  return (
+                    <TableRow key={voter.voter_id} hover>
+                      <TableCell>{voter.full_name || "—"}</TableCell>
+                      <TableCell>{voter.age || "—"}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={voter.party || "—"}
+                          color={
+                            voter.party === "R"
+                              ? "error"
+                              : voter.party === "D"
+                              ? "primary"
+                              : "default"
+                          }
                           size="small"
-                          startIcon={<MailOutlineIcon />}
-                          onClick={() => window.open(`mailto:${voter.email}`)}
-                          sx={{
-                            minWidth: 0,
-                            color: "#0A3161",
-                            "&:hover": { bgcolor: "#0A316111" },
-                          }}
-                          title={`Email ${voter.email}`}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {voter.phone_mobile || voter.phone_home || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={voter.turnout_score_general || 0}
+                          color="success"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {voter.mail_ballot_returned ? "Yes" : "No"}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                          {/* Contact buttons */}
+                          {(voter.phone_mobile || voter.phone_home) && (
+                            <>
+                              <Button
+                                size="small"
+                                startIcon={<Phone />}
+                                onClick={() =>
+                                  call(voter.phone_mobile || voter.phone_home!)
+                                }
+                              >
+                                Call
+                              </Button>
+                              <Button
+                                size="small"
+                                startIcon={<Message />}
+                                onClick={() =>
+                                  text(voter.phone_mobile || voter.phone_home!)
+                                }
+                              >
+                                Text
+                              </Button>
+                            </>
+                          )}
+                          {voter.email && (
+                            <Button
+                              size="small"
+                              startIcon={<MailOutline />}
+                              onClick={() =>
+                                window.open(`mailto:${voter.email}`)
+                              }
+                              sx={{ color: "#0A3161" }}
+                            >
+                              Email
+                            </Button>
+                          )}
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => {
+                              setSelectedVoter(voter);
+                              setOpenNote(true);
+                            }}
+                          >
+                            <AddComment />
+                          </IconButton>
+                        </Box>
+
+                        {/* TOGGLE NOTES BUTTON — Only shows if notes exist */}
+                        {notes.length > 0 && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={
+                              expandedNotes[voter.voter_id] ? (
+                                <ExpandLess />
+                              ) : (
+                                <ExpandMore />
+                              )
+                            }
+                            onClick={() =>
+                              setExpandedNotes((prev) => ({
+                                ...prev,
+                                [voter.voter_id]: !prev[voter.voter_id],
+                              }))
+                            }
+                            sx={{ mt: 1, textTransform: "none" }}
+                          >
+                            {expandedNotes[voter.voter_id]
+                              ? "Hide"
+                              : `Show Notes (${notes.length})`}
+                          </Button>
+                        )}
+
+                        {/* COLLAPSIBLE NOTES */}
+                        <Collapse
+                          in={expandedNotes[voter.voter_id]}
+                          timeout="auto"
+                          unmountOnExit
                         >
-                          Email
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          <Box sx={{ mt: 2 }}>
+                            {notes.map((note: any) => (
+                              <Paper
+                                key={note.id}
+                                sx={{
+                                  p: 2,
+                                  mb: 2,
+                                  bgcolor: "#f0f7ff",
+                                  borderLeft: "4px solid #0A3161",
+                                }}
+                              >
+                                <Box
+                                  display="flex"
+                                  alignItems="center"
+                                  gap={1}
+                                  mb={1}
+                                >
+                                  <Avatar
+                                    sx={{
+                                      width: 28,
+                                      height: 28,
+                                      fontSize: "0.8rem",
+                                    }}
+                                  >
+                                    {note.created_by_name?.[0] || "U"}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography
+                                      variant="caption"
+                                      fontWeight="bold"
+                                    >
+                                      {note.created_by_name}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                    >
+                                      {new Date(
+                                        note.created_at?.seconds * 1000
+                                      ).toLocaleString()}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                                <Typography variant="body2">
+                                  {note.note}
+                                </Typography>
+                              </Paper>
+                            ))}
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
@@ -288,19 +501,48 @@ export default function VoterListPage() {
             component="div"
             count={data.length}
             page={page}
-            onPageChange={handleChangePage}
+            onPageChange={(_, p) => setPage(p)}
             rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-            labelRowsPerPage="Rows per page:"
-            sx={{
-              "& .MuiTablePagination-toolbar": { color: "#0A3161" },
-              "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-                { color: "#0A3161" },
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
             }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
           />
         </Paper>
       )}
+
+      {/* ADD NOTE DIALOG */}
+      <Dialog
+        open={openNote}
+        onClose={() => setOpenNote(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Note for {selectedVoter?.full_name}</DialogTitle>
+        <DialogContent>
+          <TextField
+            multiline
+            rows={6}
+            fullWidth
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="e.g. Spoke to wife — very supportive, will vote R"
+            variant="outlined"
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenNote(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleAddNote}
+            disabled={!noteText.trim()}
+          >
+            Save Note
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
