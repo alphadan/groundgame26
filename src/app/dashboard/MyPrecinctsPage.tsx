@@ -32,6 +32,7 @@ import { useEffect, useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled } from "@mui/material/styles";
 import { Edit, Save, Cancel } from "@mui/icons-material";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import { auth, db } from "../../lib/firebase";
 import {
   doc,
@@ -494,6 +495,22 @@ export default function MyPrecinctsPage() {
                               onClick={() => startEdit(member)}
                             >
                               <Edit />
+                            </IconButton>
+                          )}
+                          {/* NEW: Email Button — Only shows if email exists */}
+                          {member.email && (
+                            <IconButton
+                              color="primary"
+                              onClick={() =>
+                                window.open(`mailto:${member.email}`)
+                              }
+                              title={`Email ${member.email}`}
+                              sx={{
+                                color: "#0A3161",
+                                "&:hover": { bgcolor: "#0A316111" },
+                              }}
+                            >
+                              <MailOutlineIcon />
                             </IconButton>
                           )}
                         </TableCell>
