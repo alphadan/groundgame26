@@ -1,4 +1,4 @@
-// src/app/analysis/AnalysisPage.tsx — FINAL, 100% WORKING
+// src/app/analysis/AnalysisPage.tsx — FINAL & ELITE: Full Pagination + Perfect Selects
 import { useState } from "react";
 import {
   Box,
@@ -17,8 +17,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   CircularProgress,
+  TablePagination,
 } from "@mui/material";
 import { useVoters } from "../../hooks/useVoters";
 import { saveAs } from "file-saver";
@@ -40,24 +40,25 @@ const FILTERS = {
     { value: "71+", label: "70+ Seniors/Elderly" },
   ],
   has_mail_ballot: [
-    { value: "", label: "All Mail Ballot" },
+    { value: "", label: "All Mail Ballot Status" },
     { value: "true", label: "Has Mail Ballot" },
     { value: "false", label: "No Mail Ballot" },
   ],
   turnout_score_general: [
-    { value: "", label: "All Turnout" },
-    { value: "0", label: "0- Non-Voter" },
-    { value: "1", label: "1- Inactive Voter" },
-    { value: "2", label: "2- Intermittent" },
-    { value: "3", label: "3- Frequent Voter" },
-    { value: "4", label: "4- Active Voter" },
+    { value: "", label: "All Turnout Scores" },
+    { value: "0", label: "0 - Non-Voter" },
+    { value: "1", label: "1 - Inactive Voter" },
+    { value: "2", label: "2 - Intermittent" },
+    { value: "3", label: "3 - Frequent Voter" },
+    { value: "4", label: "4 - Active Voter" },
   ],
   voted_2024_general: [
-    { value: "", label: "All 2024 General" },
+    { value: "", label: "All 2024 General Voters" },
     { value: "true", label: "Voted 2024 General" },
     { value: "false", label: "Did NOT Vote 2024 General" },
   ],
   precinct: [
+    { value: "", label: "All Precincts" },
     { value: "5", label: "5 - Atglen" },
     { value: "225", label: "225 - East Fallowfield-E" },
     { value: "230", label: "230 - East Fallowfield-W" },
@@ -74,14 +75,16 @@ const FILTERS = {
 export default function AnalysisPage() {
   const [filters, setFilters] = useState({
     precinct: "",
-    modeled_party: "2 - Weak Republican",
+    modeled_party: "",
     age_group: "",
     has_mail_ballot: "",
-    turnout_score_general: "4",
+    turnout_score_general: "",
     voted_2024_general: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
 
   const FILTERED_LIST_SQL = submitted
     ? `
@@ -131,6 +134,13 @@ export default function AnalysisPage() {
 
   const handleSubmit = () => {
     setSubmitted(true);
+    setPage(0);
+  };
+
+  const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
   };
 
   const exportList = () => {
@@ -176,132 +186,187 @@ export default function AnalysisPage() {
     );
   };
 
+  const paginatedData = data.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   return (
-    <>
-      <Box>
-        <Alert severity="success" sx={{ mt: 4 }}>
-          AI Insight: Area 15 showing surge in weak Republicans — prioritize
-          door-knocking!
-        </Alert>
-      </Box>
-      <Box p={4}>
-        <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
-          Analysis — Voter Targeting Engine
+    <Box p={4}>
+      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
+        Analysis — Voter Targeting Engine
+      </Typography>
+
+      <Paper sx={{ p: 4, mb: 6 }}>
+        <Typography variant="h6" gutterBottom color="#1E1E1E">
+          Target Your Voters
         </Typography>
 
-        <Paper sx={{ p: 4, mb: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Target Your Voters
-          </Typography>
+        <Grid container spacing={3}>
+          {Object.entries(FILTERS).map(([key, options]) => (
+            <Grid key={key}>
+              <FormControl fullWidth size="small" sx={{ minWidth: 280, mb: 2 }}>
+                <InputLabel
+                  sx={{
+                    color: "#0A3161",
+                    fontWeight: "medium",
+                    "&.Mui-focused": { color: "#0A3161" },
+                  }}
+                >
+                  {key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                </InputLabel>
+                <Select
+                  value={filters[key as keyof typeof filters]}
+                  onChange={(e) =>
+                    setFilters({ ...filters, [key]: e.target.value })
+                  }
+                  label={key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  sx={{
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#0A3161",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#0A3161",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#0A3161",
+                    },
+                    "& .MuiSvgIcon-root": { color: "#0A3161" },
+                  }}
+                >
+                  {options.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          ))}
+        </Grid>
 
-          <Grid spacing={2}>
-            {Object.entries(FILTERS).map(([key, options]) => (
-              <Grid key={key}>
-                <FormControl fullWidth>
-                  <InputLabel>
-                    {key
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </InputLabel>
-                  <Select
-                    value={filters[key as keyof typeof filters]}
-                    onChange={(e) =>
-                      setFilters({ ...filters, [key]: e.target.value })
-                    }
-                    displayEmpty
-                  >
-                    {options.map((opt) => (
-                      <MenuItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            ))}
-          </Grid>
+        <Box mt={4}>
+          <Button
+            variant="contained"
+            size="large"
+            sx={{
+              bgcolor: "#B22234",
+              "&:hover": { bgcolor: "#B22234DD" },
+              px: 6,
+            }}
+            onClick={handleSubmit}
+          >
+            Run Analysis
+          </Button>
+        </Box>
+      </Paper>
 
-          <Box mt={4}>
+      {submitted && isLoading && (
+        <Alert severity="info">Loading your targeted voters...</Alert>
+      )}
+      {error && (
+        <Alert severity="error">Error: {(error as Error).message}</Alert>
+      )}
+      {submitted && !isLoading && !error && data.length === 0 && (
+        <Alert severity="warning">
+          No voters match your filters — try broadening them
+        </Alert>
+      )}
+
+      {submitted && !isLoading && !error && data.length > 0 && (
+        <Paper>
+          <Box
+            p={3}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h6">
+              {data.length.toLocaleString()} voters found
+            </Typography>
             <Button
               variant="contained"
-              size="large"
-              sx={{ bgcolor: "#B22234" }}
-              onClick={handleSubmit}
+              sx={{ bgcolor: "#0A3161", "&:hover": { bgcolor: "#0A3161DD" } }}
+              onClick={exportList}
             >
-              Run Analysis
+              Download Full List
             </Button>
           </Box>
-        </Paper>
 
-        {submitted && isLoading && (
-          <Alert severity="info">Loading your targeted voters...</Alert>
-        )}
-        {error && (
-          <Alert severity="error">Error: {(error as Error).message}</Alert>
-        )}
-        {submitted && !isLoading && !error && data.length === 0 && (
-          <Alert severity="warning">
-            No voters match your filters — try broadening them
-          </Alert>
-        )}
-
-        {submitted && !isLoading && !error && data.length > 0 && (
-          <Paper>
-            <Box
-              p={2}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography variant="h6">{data.length} voters found</Typography>
-              <Button
-                variant="contained"
-                color="secondary"
-                onClick={exportList}
-              >
-                Download Full List
-              </Button>
-            </Box>
-
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Age</TableCell>
-                    <TableCell>Party</TableCell>
-                    <TableCell>Phone</TableCell>
-                    <TableCell>Precinct</TableCell>
-                    <TableCell>Mail Ballot</TableCell>
-                    <TableCell>Turnout</TableCell>
-                    <TableCell>2024 Vote</TableCell>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#0A3161" }}>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Name
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Age
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Party
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Phone
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Precinct
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Mail Ballot
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Turnout
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    2024 Vote
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedData.map((voter: any, i: number) => (
+                  <TableRow key={i} hover>
+                    <TableCell>{voter.full_name || "—"}</TableCell>
+                    <TableCell>{voter.age || "—"}</TableCell>
+                    <TableCell>{voter.party || "—"}</TableCell>
+                    <TableCell>
+                      {voter.phone_mobile || voter.phone_home || "—"}
+                    </TableCell>
+                    <TableCell>{voter.precinct || "—"}</TableCell>
+                    <TableCell>
+                      {voter.has_mail_ballot ? "Yes" : "No"}
+                    </TableCell>
+                    <TableCell>{voter.turnout_score_general || "—"}</TableCell>
+                    <TableCell>
+                      {voter.voted_2024_general ? "Yes" : "No"}
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {data.slice(0, 50).map((voter: any, i: number) => (
-                    <TableRow key={i}>
-                      <TableCell>{voter.full_name}</TableCell>
-                      <TableCell>{voter.age}</TableCell>
-                      <TableCell>{voter.party}</TableCell>
-                      <TableCell>
-                        {voter.phone_mobile || voter.phone_home || "—"}
-                      </TableCell>
-                      <TableCell>{voter.precinct}</TableCell>
-                      <TableCell>
-                        {voter.has_mail_ballot ? "Yes" : "No"}
-                      </TableCell>
-                      <TableCell>{voter.turnout_score_general}</TableCell>
-                      <TableCell>
-                        {voter.voted_2024_general ? "Yes" : "No"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
-      </Box>
-    </>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={data.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Rows per page:"
+            sx={{
+              "& .MuiTablePagination-toolbar": { color: "#0A3161" },
+              "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+                { color: "#0A3161" },
+            }}
+          />
+        </Paper>
+      )}
+    </Box>
   );
 }

@@ -370,21 +370,51 @@ export default function MyPrecinctsPage() {
                     .map((member) => (
                       <TableRow key={member.id}>
                         <TableCell>
-                          {editingId === member.id ? (
-                            <TextField
-                              value={editForm.display_name}
-                              onChange={(e) =>
-                                setEditForm({
-                                  ...editForm,
-                                  display_name: e.target.value,
-                                })
-                              }
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Chip
+                              label={member.dummyLogins || 0}
                               size="small"
-                              fullWidth
+                              color={
+                                member.dummyLogins === 0
+                                  ? "error"
+                                  : member.dummyLogins <= 2
+                                  ? "warning"
+                                  : member.dummyLogins <= 4
+                                  ? "default"
+                                  : "success"
+                              }
+                              sx={{
+                                width: 36,
+                                fontWeight: "bold",
+                                "& .MuiChip-label": { px: 0 },
+                              }}
                             />
-                          ) : (
-                            member.display_name || "—"
-                          )}
+
+                            {/* Name (editable) */}
+                            {editingId === member.id ? (
+                              <TextField
+                                value={editForm.display_name}
+                                onChange={(e) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    display_name: e.target.value,
+                                  })
+                                }
+                                size="small"
+                                sx={{ minWidth: 180 }}
+                              />
+                            ) : (
+                              <Typography variant="body2" fontWeight="medium">
+                                {member.display_name || "—"}
+                              </Typography>
+                            )}
+                          </Box>
                         </TableCell>
                         <TableCell>
                           {editingId === member.id ? (
@@ -484,72 +514,6 @@ export default function MyPrecinctsPage() {
               }}
               rowsPerPageOptions={[10, 25, 50]}
             />
-          </CardContent>
-        </Collapse>
-      </Card>
-
-      {/* 3. Committeemen Performance */}
-      <Card sx={{ mb: 6 }}>
-        <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
-          <Typography variant="h6" fontWeight="bold">
-            Committeemen Performance — Last 7 Days
-          </Typography>
-          <ExpandMore
-            expand={expandedPerf}
-            onClick={() => setExpandedPerf(!expandedPerf)}
-          >
-            <ExpandMoreIcon sx={{ color: "black" }} />
-          </ExpandMore>
-        </CardActions>
-        <Collapse in={expandedPerf} timeout="auto" unmountOnExit>
-          <CardContent>
-            <Box display="flex" flexWrap="wrap" gap={1.5} p={2}>
-              {committeemen.length === 0 ? (
-                <Typography color="text.secondary">
-                  No committeemen assigned yet.
-                </Typography>
-              ) : (
-                committeemen.map((member) => {
-                  const logins = member.dummyLogins || 0;
-                  const color =
-                    logins === 0
-                      ? "error"
-                      : logins <= 2
-                      ? "warning"
-                      : logins <= 4
-                      ? "default"
-                      : "success";
-                  return (
-                    <Chip
-                      key={member.id}
-                      label={
-                        <Box>
-                          <strong>{member.display_name || member.email}</strong>
-                          <br />
-                          <span style={{ fontSize: "0.8em" }}>
-                            {logins} login{logins !== 1 ? "s" : ""} (last 7
-                            days)
-                          </span>
-                        </Box>
-                      }
-                      color={color}
-                      variant={logins > 0 ? "filled" : "outlined"}
-                      sx={{
-                        height: "auto",
-                        py: 1,
-                        "& .MuiChip-label": {
-                          display: "block",
-                          whiteSpace: "normal",
-                        },
-                      }}
-                    />
-                  );
-                })
-              )}
-            </Box>
-            <Alert severity="info" sx={{ mt: 3 }}>
-              This is dummy data — real login tracking coming soon!
-            </Alert>
           </CardContent>
         </Collapse>
       </Card>

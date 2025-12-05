@@ -330,7 +330,7 @@ export default function ReportsPage() {
                 />
 
                 <Box textAlign="center" mt={4}>
-                  <Button variant="contained" size="large" onClick={exportCSV}>
+                  <Button variant="contained" size="large" sx={{bgcolor: "#0A3161"}} onClick={exportCSV}>
                     Export Full List to CSV
                   </Button>
                 </Box>
@@ -415,6 +415,7 @@ export default function ReportsPage() {
                   <Button
                     variant="contained"
                     size="large"
+                     sx={{bgcolor: "#0A3161"}}
                     onClick={exportMoversCSV}
                   >
                     Export Likely Movers to CSV
@@ -503,6 +504,7 @@ export default function ReportsPage() {
                   <Button
                     variant="contained"
                     size="large"
+                     sx={{bgcolor: "#0A3161"}}
                     onClick={exportNewRegsCSV}
                   >
                     Export New Registrants to CSV
