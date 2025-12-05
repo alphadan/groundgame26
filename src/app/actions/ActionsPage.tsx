@@ -1,4 +1,4 @@
-// src/app/actions/ActionsPage.tsx — FINAL: Collapsible Absentee Chaser
+// src/app/actions/ActionsPage.tsx — FINAL & 100% WORKING
 import { useState } from "react";
 import { useVoters } from "../../hooks/useVoters";
 import {
@@ -14,13 +14,25 @@ import {
   Collapse,
   IconButton,
   Grid,
-  CircularProgress,
   Chip,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Editor } from "@tinymce/tinymce-react";
 import { saveAs } from "file-saver";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { styled } from "@mui/material/styles";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  DocumentData,
+} from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 const ExpandMore = styled((props: any) => {
   const { expand, ...other } = props;
@@ -46,15 +58,65 @@ export default function ActionsPage() {
     "Important: Your Mail Ballot Has NOT Been Returned!"
   );
   const [message, setMessage] = useState(
-    "<p>Dear {FIRST_NAME},</p><p>Your mail ballot has not been returned yet...</p>"
+    "<p>Dear {FIRST_NAME},</p><p>Your mail ballot has not been returned yet. This is your chance to make your voice heard! Please return it as soon as possible.</p><p>Thank you,<br>{YOUR_NAME}</p>"
   );
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Collapsible state
+  // Collapsible states
   const [expandedChase, setExpandedChase] = useState(false);
+  const [expandedMessages, setExpandedMessages] = useState(false);
 
-  // Lazy load — only when expanded
+  // Filter state for Suggested Messages
+  const [msgFilters, setMsgFilters] = useState({
+    age_group: "",
+    modeled_party: "",
+    turnout_score_general: "",
+    tags: "",
+  });
+
+  // Messages state
+  const [suggestedMessages, setSuggestedMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Load suggested messages
+  const loadSuggestedMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      let q: any = query(
+        collection(db, "message_templates"),
+        where("active", "==", true)
+      );
+
+      if (msgFilters.age_group)
+        q = query(q, where("age_group", "==", msgFilters.age_group));
+      if (msgFilters.modeled_party)
+        q = query(q, where("modeled_party", "==", msgFilters.modeled_party));
+      if (msgFilters.turnout_score_general)
+        q = query(
+          q,
+          where("turnout_score_general", "==", msgFilters.turnout_score_general)
+        );
+      if (msgFilters.tags)
+        q = query(q, where("tags", "array-contains", msgFilters.tags));
+
+      const snapshot = await getDocs(q);
+
+      const templates = snapshot.docs.map((doc) => {
+        const data = doc.data() as Record<string, any>;
+        return { id: doc.id, ...data };
+      });
+
+      setSuggestedMessages(templates);
+    } catch (err: any) {
+      console.error("Firestore error:", err);
+      alert("Error loading messages: " + err.message);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  // Absentee stats
   const { data: absentee = [{}], isLoading: chaseLoading } = useVoters(
     expandedChase ? ABSENTEE_SQL : "SELECT 1 WHERE FALSE"
   );
@@ -76,7 +138,32 @@ export default function ActionsPage() {
     );
   };
 
-  const [expandedMessages, setExpandedMessages] = useState(false);
+  // Add this styled Select once (for reuse)
+const NavySelect = styled(Select)({
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#0A3161",
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#0A3161",
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#0A3161",
+  },
+  "& .MuiSvgIcon-root": {
+    color: "#0A3161",
+  },
+  "& .MuiSelect-select": {
+    color: "#0A3161",
+  },
+});
+
+const NavyInputLabel = styled(InputLabel)({
+  color: "#0A3161",
+  fontWeight: "medium",
+  "&.Mui-focused": {
+    color: "#0A3161",
+  },
+});
 
   return (
     <Box p={4}>
@@ -84,7 +171,7 @@ export default function ActionsPage() {
         Actions — Win the Ground Game
       </Typography>
 
-      {/* Email Campaign Builder — Always Visible */}
+      {/* EMAIL CAMPAIGN BUILDER */}
       <Paper sx={{ p: 4, mb: 6 }}>
         <Typography variant="h5" gutterBottom>
           Email Campaign Builder — Target Outstanding Ballots
@@ -109,7 +196,7 @@ export default function ActionsPage() {
             menubar: false,
             plugins: "lists link image table code",
             toolbar:
-              "undo redo | bold italic underline | bullist numlist | link image | table | code | formatselect",
+              "undo redo | bold italic underline | bullist numlist | link image | table | code",
             branding: false,
             statusbar: false,
             content_style:
@@ -119,7 +206,7 @@ export default function ActionsPage() {
 
         {sent && (
           <Alert severity="success" sx={{ mt: 2 }}>
-            Campaign sent to {stats.outstanding_absentee} voters!
+            Campaign sent to {stats.outstanding_absentee || 0} voters!
           </Alert>
         )}
 
@@ -127,7 +214,7 @@ export default function ActionsPage() {
           <Button
             variant="contained"
             size="large"
-            sx={{ bgcolor: "#B22234" }}
+            sx={{ bgcolor: "#B22234", "&:hover": { bgcolor: "#B22234DD" } }}
             onClick={handleSend}
             disabled={sending}
           >
@@ -139,15 +226,15 @@ export default function ActionsPage() {
         </Box>
       </Paper>
 
-      {/* NEW: Suggested Messages — Smart & Personalized */}
+      {/* SUGGESTED MESSAGES — With Filters + Get Messages Button */}
       <Card sx={{ mb: 6 }}>
         <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">
-              Suggested Messages — Personalized Outreach
+              Suggested Messages — Personalized & Proven
             </Typography>
             <Typography variant="body2">
-              Click a voter profile to copy a tailored message
+              Select filters and click "Get Messages"
             </Typography>
           </Box>
           <ExpandMore
@@ -159,127 +246,220 @@ export default function ActionsPage() {
         </CardActions>
 
         <Collapse in={expandedMessages} timeout="auto" unmountOnExit>
-          <CardContent sx={{ pt: 3 }}>
-            <Grid container spacing={3}>
-              {/* Example 1: Likely Mover, Age 30-40 */}
+          <CardContent>
+            {/* FILTERS — All with minWidth 280 */}
+            <Grid container spacing={3} mb={4}>
               <Grid>
-                <Paper
-                  sx={{
-                    p: 3,
-                    bgcolor: "#e3f2fd",
-                    cursor: "pointer",
-                    "&:hover": { bgcolor: "#bbdefb" },
-                    transition: "0.2s",
-                  }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      "Hi {FIRST_NAME}! Welcome to the neighborhood! I noticed you recently moved in — we're so glad you're here. Chester County has excellent schools, beautiful parks, and a strong sense of community. I'm your local Republican Committeeman and live just down the street. Please don't hesitate to reach out if you need help finding polling locations, updating your voter registration, or just want to say hi! — {YOUR_NAME}"
-                    );
-                    alert("Message copied to clipboard!");
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight="bold"
-                    color="#1976d2"
+                <FormControl fullWidth size="small" sx={{ minWidth: 280 }}>
+                  <InputLabel>Age Group</InputLabel>
+                  <Select
+                    value={msgFilters.age_group}
+                    sx={{
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "& .MuiSvgIcon-root": { color: "#0A3161" },
+                    }}
+                    onChange={(e) =>
+                      setMsgFilters({
+                        ...msgFilters,
+                        age_group: e.target.value,
+                      })
+                    }
                   >
-                    Likely Mover • Age 26–40
-                  </Typography>
-                  <Typography variant="body2" mt={1}>
-                    "Welcome! I noticed you may have moved into the
-                    neighborhood..."
-                  </Typography>
-                  <Chip
-                    label="Click to Copy"
-                    size="small"
-                    color="primary"
-                    sx={{ mt: 2 }}
-                  />
-                </Paper>
+                    <MenuItem value="">Any Age</MenuItem>
+                    <MenuItem value="18-25">18-25 Young Adult Voters</MenuItem>
+                    <MenuItem value="26-40">26-40 Young Families</MenuItem>
+                    <MenuItem value="41-70">41-70 Established Voters</MenuItem>
+                    <MenuItem value="71+">70+ Seniors/Elderly</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
-
-              {/* Example 2: Weak Republican, Age 41-70 */}
               <Grid>
-                <Paper
-                  sx={{
-                    p: 3,
-                    bgcolor: "#ffebee",
-                    cursor: "pointer",
-                    "&:hover": { bgcolor: "#ffcdd2" },
-                  }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      "Hi {FIRST_NAME}, I'm your local Republican Committeeman. I wanted to make sure you know your voice matters here in Chester County. With everything going on, we need common-sense leadership more than ever. If you need help voting by mail, finding your polling place, or just want to talk about what’s important to you, I’m right here in the neighborhood. Hope to hear from you! — {YOUR_NAME}"
-                    );
-                    alert("Message copied!");
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight="bold"
-                    color="#d32f2f"
+                <FormControl fullWidth size="small" sx={{ minWidth: 280 }}>
+                  <InputLabel>Modeled Party</InputLabel>
+                  <Select
+                    value={msgFilters.modeled_party}
+                    sx={{
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "& .MuiSvgIcon-root": { color: "#0A3161" },
+                    }}
+                    onChange={(e) =>
+                      setMsgFilters({
+                        ...msgFilters,
+                        modeled_party: e.target.value,
+                      })
+                    }
                   >
-                    Weak Republican • Age 41–70
-                  </Typography>
-                  <Typography variant="body2" mt={1}>
-                    "Your voice matters here in Chester County..."
-                  </Typography>
-                  <Chip
-                    label="Click to Copy"
-                    size="small"
-                    color="error"
-                    sx={{ mt: 2 }}
-                  />
-                </Paper>
+                    <MenuItem value="">All Modeled Party</MenuItem>
+                    <MenuItem value="1 - Hard Republican">
+                      1 - Hard Republican
+                    </MenuItem>
+                    <MenuItem value="2 - Weak Republican">
+                      2 - Weak Republican
+                    </MenuItem>
+                    <MenuItem value="3 - Swing">3 - Swing</MenuItem>
+                    <MenuItem value="4 - Weak Democrat">
+                      4 - Weak Democrat
+                    </MenuItem>
+                    <MenuItem value="5 - Hard Democrat">
+                      5 - Hard Democrat
+                    </MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
-
-              {/* Example 3: Young Republican (18-25) */}
               <Grid>
-                <Paper
-                  sx={{
-                    p: 3,
-                    bgcolor: "#fff3e0",
-                    cursor: "pointer",
-                    "&:hover": { bgcolor: "#ffe0b2" },
-                  }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      "Hey {FIRST_NAME}! Welcome to voting in Chester County! I'm your local Republican Committeeman and just wanted to say hi. A lot of us your age are getting involved because we care about lower taxes, school choice, and keeping our communities safe. If you ever need help voting or just want to chat, hit me up — I’m right here in the area! — {YOUR_NAME}"
-                    );
-                    alert("Message copied!");
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight="bold"
-                    color="#ef6c00"
+                <FormControl fullWidth size="small" sx={{ minWidth: 280 }}>
+                  <InputLabel>Turnout Score</InputLabel>
+                  <Select
+                    value={msgFilters.turnout_score_general}
+                    onChange={(e) =>
+                      setMsgFilters({
+                        ...msgFilters,
+                        turnout_score_general: e.target.value,
+                      })
+                    }
+                    sx={{
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "& .MuiSvgIcon-root": { color: "#0A3161" },
+                    }}
                   >
-                    Young Voter • Age 18–25
-                  </Typography>
-                  <Typography variant="body2" mt={1}>
-                    "Hey! Welcome to voting in Chester County..."
-                  </Typography>
-                  <Chip
-                    label="Click to Copy"
-                    size="small"
-                    color="warning"
-                    sx={{ mt: 2 }}
-                  />
-                </Paper>
+                    <MenuItem value="">All Turnout Scores</MenuItem>
+                    <MenuItem value="4">4 - Active Voter</MenuItem>
+                    <MenuItem value="3">3 - Frequent Voter</MenuItem>
+                    <MenuItem value="2">2 - Intermittent</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
-
-              {/* Add more as needed */}
+              <Grid>
+                <FormControl fullWidth size="small" sx={{ minWidth: 280 }}>
+                  <InputLabel>Tag</InputLabel>
+                  <Select
+                    value={msgFilters.tags}
+                    sx={{
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#0A3161",
+                      },
+                      "& .MuiSvgIcon-root": { color: "#0A3161" },
+                    }}
+                    onChange={(e) =>
+                      setMsgFilters({ ...msgFilters, tags: e.target.value })
+                    }
+                  >
+                    <MenuItem value="">Any Tag</MenuItem>
+                    <MenuItem value="likely_mover">Likely Mover</MenuItem>
+                    <MenuItem value="parent">Parent</MenuItem>
+                    <MenuItem value="veteran">Veteran</MenuItem>
+                    <MenuItem value="new_registrant">
+                      New 2025 Registrant
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
             </Grid>
 
-            <Alert severity="info" sx={{ mt: 4 }}>
-              These messages are hand-crafted for maximum response. More coming
-              soon!
-            </Alert>
+            {/* GET MESSAGES BUTTON */}
+            <Box textAlign="center" mb={4}>
+              <Button
+                variant="contained"
+                size="large"
+                sx={{ bgcolor: "#B22234", "&:hover": { bgcolor: "#B22234DD" } }}
+                onClick={loadSuggestedMessages}
+                disabled={loadingMessages}
+              >
+                {loadingMessages
+                  ? "Loading Messages..."
+                  : "Get Suggested Messages"}
+              </Button>
+            </Box>
+
+            {/* MESSAGES */}
+            {loadingMessages ? (
+              <Box textAlign="center" py={8}>
+                <CircularProgress />
+                <Typography mt={2}>Loading curated messages...</Typography>
+              </Box>
+            ) : suggestedMessages.length === 0 ? (
+              <Alert severity="info">
+                No curated messages match these filters — use the email builder
+                above.
+              </Alert>
+            ) : (
+              <Grid container spacing={3}>
+                {suggestedMessages.map((msg) => (
+                  <Grid key={msg.id}>
+                    <Paper
+                      sx={{
+                        p: 3,
+                        bgcolor: "#e3f2fd",
+                        cursor: "pointer",
+                        "&:hover": { bgcolor: "#bbdefb" },
+                        borderLeft: "4px solid #1565c0",
+                        transition: "0.2s",
+                      }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(msg.body);
+                        alert("Message copied to clipboard!");
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        color="#1565c0"
+                      >
+                        {msg.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        mt={1}
+                        sx={{ whiteSpace: "pre-line", fontSize: "0.9rem" }}
+                      >
+                        {msg.body.substring(0, 180)}...
+                      </Typography>
+                      <Chip
+                        label="Click to Copy"
+                        size="small"
+                        color="primary"
+                        sx={{ mt: 2 }}
+                      />
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </CardContent>
         </Collapse>
       </Card>
 
-      {/* Collapsible Absentee Chase Dashboard */}
+      {/* ABSENTEE BALLOT CHASER */}
       <Card sx={{ mb: 6 }}>
         <CardActions disableSpacing sx={{ bgcolor: "#D3D3D3", color: "black" }}>
           <Box>
@@ -316,7 +496,6 @@ export default function ActionsPage() {
                     <Typography variant="h6">Outstanding Ballots</Typography>
                   </Paper>
                 </Grid>
-
                 <Grid>
                   <Paper sx={{ p: 4, textAlign: "center", bgcolor: "#e8f5e8" }}>
                     <Typography variant="h3" color="success">
@@ -325,7 +504,6 @@ export default function ActionsPage() {
                     <Typography variant="h6">Return Rate</Typography>
                   </Paper>
                 </Grid>
-
                 <Grid>
                   <Paper sx={{ p: 4, textAlign: "center" }}>
                     <Typography variant="h3">
@@ -340,8 +518,9 @@ export default function ActionsPage() {
             <Box textAlign="center" mt={4}>
               <Button
                 variant="contained"
-                sx={{ bgcolor: "#B22234" }}
+                color="error"
                 size="large"
+                sx={{ bgcolor: "#0A3161", "&:hover": { bgcolor: "#0A3161DD" } }}
                 onClick={exportOutstanding}
                 disabled={chaseLoading}
               >

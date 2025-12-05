@@ -5,6 +5,11 @@ import {
   Typography,
   Paper,
   Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Collapse,
+  Chip,
   FormControl,
   InputLabel,
   Select,
@@ -22,6 +27,8 @@ import {
 } from "@mui/material";
 import { useVoters } from "../../hooks/useVoters";
 import { saveAs } from "file-saver";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 const FILTERS = {
   modeled_party: [
@@ -85,6 +92,8 @@ export default function AnalysisPage() {
   const [submitted, setSubmitted] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [expandedMessages, setExpandedMessages] = useState(false);
+  const [suggestedMessages, setSuggestedMessages] = useState<any[]>([]);
 
   const FILTERED_LIST_SQL = submitted
     ? `
@@ -190,6 +199,41 @@ export default function AnalysisPage() {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  const loadSuggestedMessages = async () => {
+    const q = query(
+      collection(db, "message_templates"),
+      where("active", "==", true)
+    );
+    const snapshot = await getDocs(q);
+    const templates = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Simple matching logic
+    const matches = templates.filter((t: any) => {
+      if (!t.filters) return true; // fallback
+
+      const f = filters;
+      if (
+        t.filters.modeled_party &&
+        !t.filters.modeled_party.includes(f.modeled_party)
+      )
+        return false;
+      if (t.filters.age_group && !t.filters.age_group.includes(f.age_group))
+        return false;
+      if (
+        t.filters.voted_2024_general !== undefined &&
+        t.filters.voted_2024_general !== (f.voted_2024_general === "false")
+      )
+        return false;
+
+      return true;
+    });
+
+    setSuggestedMessages(matches);
+  };
 
   return (
     <Box p={4}>
