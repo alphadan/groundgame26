@@ -29,6 +29,7 @@ import {
   LocationOn,
 } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
+import Logo from "../../components/ui/Logo";
 
 const drawerWidth = 260;
 
@@ -64,10 +65,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const drawer = (
     <Box>
-      <Toolbar>
-        <Typography variant="h6" color="#B22234" fontWeight="bold">
-          groundgame26
-        </Typography>
+      <Toolbar sx={{mt: 2, mb: 2}}>
+        <Logo/>
       </Toolbar>
       <List>
         {menuItems.map((item, index) => {
@@ -175,9 +174,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <IconButton color="inherit" onClick={() => setMobileOpen(true)}>
                 <MenuIcon />
               </IconButton>
-              <Typography variant="h6" ml={2}>
-                groundgame26
-              </Typography>
+              <Logo />
             </Toolbar>
           </AppBar>
         )}
