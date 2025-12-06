@@ -1,4 +1,4 @@
-// src/app/voters/VoterListPage.tsx — FINAL & 100% WORKING WITH voter_id
+// src/app/voters/VoterListPage.tsx — FINAL & 100% WORKING
 import { useVoters } from "../../hooks/useVoters";
 import {
   Box,
@@ -79,15 +79,15 @@ export default function VoterListPage() {
   );
 
   // Dynamic query — includes voter_id
-  const VOTER_LIST_SQL =
-    selectedPrecinct && selectedPrecinct
-      ? `
+  const VOTER_LIST_SQL = selectedPrecinct
+    ? `
     SELECT
       voter_id,
       full_name,
       age,
       gender,
       party,
+      modeled_party,
       phone_home,
       phone_mobile,
       address,
@@ -100,16 +100,16 @@ export default function VoterListPage() {
     ORDER BY turnout_score_general DESC
     LIMIT 1000
   `
-      : `
+    : `
     SELECT
       voter_id,
       full_name,
       age,
       gender,
       party,
+      modeled_party,
       phone_home,
       phone_mobile,
-      email,
       address,
       turnout_score_general,
       mail_ballot_returned,
@@ -140,7 +140,6 @@ export default function VoterListPage() {
   // Real-time notes using voter_id
   useEffect(() => {
     if (!data.length) return;
-    if (!paginatedData.length) return;
 
     const unsubscribes: Unsubscribe[] = data.map((voter: any) => {
       if (!voter.voter_id) return () => {};
@@ -167,8 +166,6 @@ export default function VoterListPage() {
     if (!noteText.trim() || !selectedVoter || !auth.currentUser) return;
 
     try {
-      console.log("Saving note for voter_id:", selectedVoter.voter_id);
-
       await addDoc(collection(db, "voter_notes"), {
         voter_id: selectedVoter.voter_id,
         full_name: selectedVoter.full_name,
@@ -182,7 +179,6 @@ export default function VoterListPage() {
         created_at: new Date(),
       });
 
-      console.log("Note saved to Firestore!");
       setNoteText("");
       setOpenNote(false);
     } catch (err) {
@@ -198,15 +194,12 @@ export default function VoterListPage() {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
+      <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
         Voter Contact List — Your Precincts
       </Typography>
 
       {/* PRECINCT FILTER */}
       <Paper sx={{ p: 3, mb: 4, bgcolor: "#f5f5f5" }}>
-        <Typography variant="h6" gutterBottom color="#0A3161">
-          Select Precinct to Load Voter List
-        </Typography>
         <Grid container spacing={2} alignItems="center">
           <Grid>
             <FormControl fullWidth size="small" sx={{ minWidth: 300 }}>
@@ -260,11 +253,6 @@ export default function VoterListPage() {
             </Button>
           </Grid>
         </Grid>
-        {!selectedPrecinct && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Select a precinct above to load voters
-          </Typography>
-        )}
       </Paper>
 
       {submitted && isLoading && (
@@ -275,9 +263,9 @@ export default function VoterListPage() {
           </Typography>
         </Box>
       )}
-      {error && <Alert severity="error">Error loading data. Try again.</Alert>}
+      {error && <Alert severity="error">{(error as Error).message}</Alert>}
 
-      {submitted && !isLoading && !error && data.length === 0 && (
+      {submitted && !isLoading && data.length === 0 && (
         <Alert severity="info">
           No voters found in precinct {selectedPrecinct}.
         </Alert>
@@ -310,6 +298,9 @@ export default function VoterListPage() {
                     Party
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Modeled Party
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Phone
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
@@ -331,9 +322,12 @@ export default function VoterListPage() {
                     <TableRow key={voter.voter_id} hover>
                       <TableCell>{voter.full_name || "—"}</TableCell>
                       <TableCell>{voter.age || "—"}</TableCell>
+
+                      {/* PARTY */}
                       <TableCell>
                         <Chip
-                          label={voter.party || "—"}
+                          label={voter.party || "NF"}
+                          size="small"
                           color={
                             voter.party === "R"
                               ? "error"
@@ -341,9 +335,30 @@ export default function VoterListPage() {
                               ? "primary"
                               : "default"
                           }
-                          size="small"
                         />
                       </TableCell>
+
+                      {/* MODELED PARTY */}
+                      <TableCell>
+                        <Chip
+                          label={voter.modeled_party || "—"}
+                          size="small"
+                          color={
+                            voter.modeled_party?.includes("Hard R")
+                              ? "error"
+                              : voter.modeled_party?.includes("Weak R")
+                              ? "warning"
+                              : voter.modeled_party?.includes("Swing")
+                              ? "default"
+                              : voter.modeled_party?.includes("Weak D")
+                              ? "info"
+                              : voter.modeled_party?.includes("Hard D")
+                              ? "primary"
+                              : "default"
+                          }
+                        />
+                      </TableCell>
+
                       <TableCell>
                         {voter.phone_mobile || voter.phone_home || "—"}
                       </TableCell>
@@ -357,9 +372,16 @@ export default function VoterListPage() {
                       <TableCell>
                         {voter.mail_ballot_returned ? "Yes" : "No"}
                       </TableCell>
+
+                      {/* ACTIONS + NOTES */}
                       <TableCell>
-                        <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-                          {/* Contact buttons */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 1,
+                            mb: notes.length > 0 ? 3 : 1,
+                          }}
+                        >
                           {(voter.phone_mobile || voter.phone_home) && (
                             <>
                               <Button
@@ -406,7 +428,7 @@ export default function VoterListPage() {
                           </IconButton>
                         </Box>
 
-                        {/* TOGGLE NOTES BUTTON — Only shows if notes exist */}
+                        {/* TOGGLE NOTES BUTTON */}
                         {notes.length > 0 && (
                           <Button
                             size="small"
@@ -424,7 +446,7 @@ export default function VoterListPage() {
                                 [voter.voter_id]: !prev[voter.voter_id],
                               }))
                             }
-                            sx={{ mt: 1, textTransform: "none" }}
+                            sx={{ mt: 1 }}
                           >
                             {expandedNotes[voter.voter_id]
                               ? "Hide"

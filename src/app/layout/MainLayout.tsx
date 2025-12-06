@@ -28,6 +28,7 @@ import {
   DirectionsWalk,
   LocationOn,
 } from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search";
 
 const drawerWidth = 260;
 
@@ -56,6 +57,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { divider: true },
     { text: "Voter List", icon: <Phone />, path: "/voters" },
     { text: "Walk Lists", icon: <DirectionsWalk />, path: "/walk-lists" },
+    { text: "Name Search", icon: <SearchIcon />, path: "/name-search" },
     { divider: true },
     { text: "Interactive Map", icon: <LocationOn />, path: "/maps" },
   ];
