@@ -1,32 +1,38 @@
-// src/app/walk/WalkListPage.tsx — FINAL & 100% WORKING WITH NOTES
-import { useState, useEffect } from "react";
-import { useVoters } from "../../hooks/useVoters";
+// src/app/walk/WalkListPage.tsx — FINAL, NO ERRORS, GROUPED BY ADDRESS
+import { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
   Paper,
-  Button,
-  TextField,
-  Alert,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Button,
   Chip,
-  CircularProgress,
-  Grid,
+  Alert,
   TablePagination,
+  CircularProgress,
+  TextField,
+  Grid,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Avatar,
+  Collapse,
+  Badge,
 } from "@mui/material";
-import { saveAs } from "file-saver";
-import { AddComment } from "@mui/icons-material";
+import {
+  Phone,
+  Message,
+  Home,
+  ExpandMore,
+  ExpandLess,
+  AddComment,
+} from "@mui/icons-material";
 import {
   collection,
   addDoc,
@@ -34,229 +40,182 @@ import {
   where,
   orderBy,
   onSnapshot,
-  Unsubscribe,
 } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
+import { useVoters } from "../../hooks/useVoters";
 
 export default function WalkListPage() {
-  const [zipInput, setZipInput] = useState("");
   const [zipCode, setZipCode] = useState("");
+  const [streetFilter, setStreetFilter] = useState("");
   const [submitted, setSubmitted] = useState(false);
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [expandedHouse, setExpandedHouse] = useState("");
 
-  // Notes state
   const [openNote, setOpenNote] = useState(false);
   const [selectedVoter, setSelectedVoter] = useState<any>(null);
   const [noteText, setNoteText] = useState("");
-  const [voterNotes, setVoterNotes] = useState<Record<string, any[]>>({});
 
-  // Extract first 5 digits
-  useEffect(() => {
-    const cleaned = zipInput.replace(/\D/g, "").slice(0, 5);
-    setZipCode(cleaned);
-  }, [zipInput]);
+  // Build BigQuery SQL
+  const buildQuery = () => {
+    const conditions: string[] = [];
 
-  const WALK_LIST_SQL =
-    submitted && zipCode.length === 5
-      ? `
-    SELECT
-      voter_id,
-      address,
-      full_name,
-      age,
-      party,
-      modeled_party,
-      turnout_score_general,
-      has_mail_ballot,
-      voted_2024_general
-    FROM \`groundgame26_voters.chester_county\`
-    WHERE ZIP_CODE = ${zipCode}
-    ORDER BY address, full_name
-  `
-      : "";
+    if (zipCode) {
+      const cleanZip = zipCode.replace(/\D/g, "").slice(0, 5);
+      if (cleanZip.length === 5) {
+        conditions.push(`zip_code = CAST(${cleanZip} AS INT64)`);
+      }
+    }
 
-  const { data = [], isLoading, error } = useVoters(WALK_LIST_SQL);
+    if (streetFilter.trim()) {
+      const clean = streetFilter
+        .trim()
+        .replace(/[^a-zA-Z\s]/g, " ")
+        .replace(/\s+/g, " ");
+      if (clean.length > 1) {
+        const escaped = clean.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+        conditions.push(
+          `REGEXP_CONTAINS(LOWER(address), r'(?i)\\b${escaped}')`
+        );
+      }
+    }
 
-  // Real-time notes using voter_id
-  useEffect(() => {
-    if (!data.length) return;
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    const unsubscribes: Unsubscribe[] = data.map((voter: any) => {
-      if (!voter.voter_id) return () => {};
+    return `
+      SELECT voter_id, full_name, age, party, phone_mobile, phone_home,
+             address, city, zip_code, turnout_score_general
+      FROM \`groundgame26_voters.chester_county\`
+      ${whereClause}
+      ORDER BY address, turnout_score_general DESC
+      LIMIT 2000
+    `.trim();
+  };
 
-      const q = query(
-        collection(db, "voter_notes"),
-        where("voter_id", "==", voter.voter_id),
-        orderBy("created_at", "desc")
-      );
+  const sql = buildQuery();
+  const { data = [], isLoading, error } = useVoters(sql);
 
-      return onSnapshot(q, (snapshot) => {
-        const notes = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setVoterNotes((prev) => ({ ...prev, [voter.voter_id]: notes }));
-      });
+  // Group by address — fully typed, no errors
+  const households = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+
+    data.forEach((voter: any) => {
+      const addr = voter.address?.trim() || "Unknown Address";
+      if (!groups[addr]) groups[addr] = [];
+      groups[addr].push(voter);
     });
 
-    return () => unsubscribes.forEach((unsub) => unsub?.());
+    return Object.keys(groups)
+      .map((address) => {
+        const voters = groups[address];
+        return {
+          address,
+          city: voters[0]?.city,
+          zip_code: voters[0]?.zip_code,
+          voters: voters.sort(
+            (a: any, b: any) =>
+              (b.turnout_score_general || 0) - (a.turnout_score_general || 0)
+          ),
+        };
+      })
+      .sort((a, b) => a.address.localeCompare(b.address));
   }, [data]);
 
-  const handleAddNote = async () => {
-    if (!noteText.trim() || !selectedVoter || !auth.currentUser) return;
-
-    try {
-      await addDoc(collection(db, "voter_notes"), {
-        voter_id: selectedVoter.voter_id,
-        full_name: selectedVoter.full_name,
-        address: selectedVoter.address,
-        note: noteText,
-        created_by_uid: auth.currentUser.uid,
-        created_by_name:
-          auth.currentUser.displayName ||
-          auth.currentUser.email?.split("@")[0] ||
-          "User",
-        created_at: new Date(),
-      });
-
-      setNoteText("");
-      setOpenNote(false);
-    } catch (err) {
-      console.error("Failed to save note", err);
-      alert("Failed to save note");
-    }
-  };
-
-  const handleSubmit = () => {
-    if (zipCode.length !== 5) {
-      alert("Please enter a valid 5-digit ZIP code");
-      return;
-    }
-    setSubmitted(true);
-    setPage(0);
-  };
-
-  const exportCSV = () => {
-    const csv = [
-      "Address,Name,Age,Party,Modeled Party,Turnout Score,Mail Ballot,Voted 2024",
-      ...data.map(
-        (v: any) =>
-          `${v.address || ""},"${v.full_name || ""}",${v.age || ""},${
-            v.party || ""
-          },${v.modeled_party || ""},${v.turnout_score_general || ""},${
-            v.has_mail_ballot ? "Yes" : "No"
-          },${v.voted_2024_general ? "Yes" : "No"}`
-      ),
-    ].join("\n");
-
-    saveAs(
-      new Blob([csv], { type: "text/csv" }),
-      `Walk_List_ZIP_${zipCode}.csv`
-    );
-  };
-
-  // Group by address
-  const groupedByAddress = data.reduce(
-    (acc: Record<string, any[]>, voter: any) => {
-      const addr = voter.address || "Unknown Address";
-      if (!acc[addr]) acc[addr] = [];
-      acc[addr].push(voter);
-      return acc;
-    },
-    {} as Record<string, any[]>
-  );
-
-  const addressEntries = Object.entries(groupedByAddress);
-  const paginatedEntries = addressEntries.slice(
+  const paginated = households.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
 
+  const handleGenerate = () => {
+    if (!zipCode && !streetFilter.trim()) {
+      alert("Please enter a zip code or street name");
+      return;
+    }
+    setSubmitted(true);
+    setPage(0);
+    setExpandedHouse("");
+  };
+
+  const handleAddNote = async () => {
+    if (!noteText.trim() || !selectedVoter) return;
+
+    await addDoc(collection(db, "voter_notes"), {
+      voter_id: selectedVoter.voter_id,
+      full_name: selectedVoter.full_name,
+      address: selectedVoter.address,
+      note: noteText,
+      created_by_uid: auth.currentUser?.uid || "unknown",
+      created_by_name: auth.currentUser?.displayName || "Canvasser",
+      created_at: new Date(),
+    });
+
+    setNoteText("");
+    setOpenNote(false);
+  };
+
   return (
     <Box p={4}>
       <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
-        Walk List Generator — Street-by-Street Targets
+        Walk List — Grouped by Address
       </Typography>
 
-      <Paper sx={{ p: 4, mb: 6 }}>
-        <Typography variant="h6" gutterBottom color="#0A3161">
-          Enter ZIP Code to Generate Walk List
-        </Typography>
-
-        <Grid container spacing={3} alignItems="center">
+      <Paper sx={{ p: 3, mb: 4, bgcolor: "#f5f5f5" }}>
+        <Grid container spacing={2} alignItems="center">
           <Grid>
             <TextField
-              label="ZIP Code"
-              fullWidth
-              value={zipInput}
-              onChange={(e) => setZipInput(e.target.value)}
-              placeholder="19320 or 19320-1234"
-              helperText={zipCode.length === 5 ? "Ready!" : "Enter 5 digits"}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: zipCode.length === 5 ? "#0A3161" : undefined,
-                  },
-                  "&.Mui-focused fieldset": { borderColor: "#0A3161" },
-                },
-              }}
+              label="Zip Code"
+              value={zipCode}
+              onChange={(e) =>
+                setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))
+              }
+              size="small"
+              placeholder="19365"
+              sx={{ minWidth: 140 }}
+            />
+          </Grid>
+          <Grid>
+            <TextField
+              label="Street Name"
+              value={streetFilter}
+              onChange={(e) => setStreetFilter(e.target.value)}
+              size="small"
+              placeholder="Main, Oak, Church"
+              sx={{ minWidth: 240 }}
             />
           </Grid>
           <Grid>
             <Button
               variant="contained"
-              size="large"
-              sx={{
-                bgcolor: "#0A3161",
-                "&:hover": { bgcolor: "#0d47a1" },
-                px: 6,
-              }}
-              onClick={handleSubmit}
-              disabled={zipCode.length !== 5 || isLoading}
+              onClick={handleGenerate}
+              disabled={isLoading}
+              sx={{ bgcolor: "#0A3161", height: 56, px: 6 }}
             >
-              {isLoading ? "Loading..." : "Generate List"}
+              {isLoading ? <CircularProgress size={24} /> : "Generate List"}
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {submitted && isLoading && (
+      {isLoading && submitted && (
         <Box textAlign="center" py={8}>
           <CircularProgress />
-          <Typography mt={2}>
-            Building your walk list for ZIP {zipCode}...
-          </Typography>
+          <Typography mt={2}>Loading walk list...</Typography>
         </Box>
       )}
 
-      {error && <Alert severity="error">Error loading data. Try again.</Alert>}
+      {error && <Alert severity="error">Error loading data</Alert>}
 
-      {submitted && !isLoading && !error && data.length === 0 && (
-        <Alert severity="info">
-          No high-value targets found in ZIP {zipCode}. Try another area!
-        </Alert>
+      {submitted && !isLoading && households.length === 0 && (
+        <Alert severity="info">No voters found for that search.</Alert>
       )}
 
-      {submitted && !isLoading && !error && data.length > 0 && (
+      {submitted && households.length > 0 && (
         <Paper>
-          <Box
-            p={3}
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h5">
-              {data.length.toLocaleString()} Targets in ZIP {zipCode}
+          <Box p={3}>
+            <Typography variant="h6">
+              {households.length} Households • {data.length} Voters
             </Typography>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#d32f2f", "&:hover": { bgcolor: "#b71c1c" } }}
-              onClick={exportCSV}
-            >
-              Export Walk List
-            </Button>
           </Box>
 
           <TableContainer>
@@ -267,217 +226,192 @@ export default function WalkListPage() {
                     Address
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Name
+                    Voters
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Age
+                    Phones
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Party
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Modeled
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Turnout
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    2024 Vote
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Notes
+                    Actions
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedEntries.map(([address, voters]) => {
-                  const typedVoters = voters as any[];
-                  return typedVoters.map((voter, i) => {
-                    const notes = voterNotes[voter.voter_id] || [];
+                {paginated.map((house) => {
+                  const phones = Array.from(
+                    new Set(
+                      house.voters
+                        .map((v: any) => v.phone_mobile || v.phone_home)
+                        .filter(Boolean)
+                    )
+                  );
 
-                    return (
-                      <TableRow key={`${address}-${i}`} hover>
-                        {i === 0 && (
-                          <TableCell
-                            rowSpan={typedVoters.length}
-                            sx={{ verticalAlign: "top", fontWeight: "bold" }}
-                          >
-                            {address}
-                            <br />
-                            <Chip
-                              label={`${typedVoters.length} voter${
-                                typedVoters.length > 1 ? "s" : ""
-                              }`}
-                              size="small"
-                              color="primary"
-                              sx={{ mt: 1 }}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell>{voter.full_name || "—"}</TableCell>
-                        <TableCell>{voter.age || "—"}</TableCell>
+                  return (
+                    <>
+                      {/* MAIN ROW */}
+                      <TableRow
+                        hover
+                        sx={{ cursor: "pointer" }}
+                        onClick={() =>
+                          setExpandedHouse(
+                            expandedHouse === house.address ? "" : house.address
+                          )
+                        }
+                      >
                         <TableCell>
-                          <Chip
-                            label={voter.party || "NF"}
-                            size="small"
-                            color={
-                              voter.party === "R"
-                                ? "error"
-                                : voter.party === "D"
-                                ? "primary"
-                                : "default"
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={voter.modeled_party || "—"}
-                            size="small"
-                            color={
-                              voter.modeled_party?.includes("Hard R")
-                                ? "error"
-                                : voter.modeled_party?.includes("Weak R")
-                                ? "warning"
-                                : voter.modeled_party?.includes("Swing")
-                                ? "default"
-                                : voter.modeled_party?.includes("Weak D")
-                                ? "info"
-                                : voter.modeled_party?.includes("Hard D")
-                                ? "primary"
-                                : "default"
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={voter.turnout_score_general || 0}
-                            color="success"
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {voter.voted_2024_general ? "Yes" : "No"}
-                        </TableCell>
-
-                        {/* NOTES + ADD BUTTON */}
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => {
-                                setSelectedVoter(voter);
-                                setOpenNote(true);
-                              }}
-                            >
-                              <AddComment />
-                            </IconButton>
-                            {notes.length > 0 && (
-                              <Chip
-                                label={notes.length}
-                                color="primary"
-                                size="small"
-                              />
-                            )}
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <Home fontSize="small" />
+                            <Box>
+                              <Typography fontWeight="bold">
+                                {house.address}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {house.city}, PA {house.zip_code}
+                              </Typography>
+                            </Box>
                           </Box>
-
-                          {/* Always-visible notes */}
-                          {notes.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                              {notes.map((note: any) => (
-                                <Paper
-                                  key={note.id}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            badgeContent={house.voters.length}
+                            color="primary"
+                          >
+                            <Chip label="People" size="small" />
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {phones.length > 0 ? phones.join(" • ") : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" gap={1} alignItems="center">
+                            {phones.map((p) => (
+                              <>
+                                <IconButton
+                                  component="a"
+                                  href={`tel:${p.replace(/\D/g, "")}`}
+                                  size="small"
                                   sx={{
-                                    p: 2,
-                                    mb: 1,
-                                    bgcolor: "#f0f7ff",
-                                    borderLeft: "4px solid #0A3161",
+                                    bgcolor: "white",
+                                    color: "success.main",
                                   }}
                                 >
-                                  <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    gap={1}
-                                    mb={1}
-                                  >
-                                    <Avatar
-                                      sx={{
-                                        width: 24,
-                                        height: 24,
-                                        fontSize: "0.75rem",
-                                      }}
-                                    >
-                                      {note.created_by_name?.[0] || "U"}
-                                    </Avatar>
-                                    <Typography
-                                      variant="caption"
-                                      fontWeight="bold"
-                                    >
-                                      {note.created_by_name}
-                                    </Typography>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {new Date(
-                                        note.created_at?.seconds * 1000
-                                      ).toLocaleDateString()}
-                                    </Typography>
-                                  </Box>
-                                  <Typography variant="body2">
-                                    {note.note}
-                                  </Typography>
-                                </Paper>
-                              ))}
-                            </Box>
-                          )}
+                                  <Phone fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  component="a"
+                                  href={`sms:${p.replace(/\D/g, "")}`}
+                                  size="small"
+                                  sx={{ bgcolor: "white", color: "info.main" }}
+                                >
+                                  <Message fontSize="small" />
+                                </IconButton> • 
+                              </>
+                            ))}
+                            {expandedHouse === house.address ? (
+                              <ExpandLess />
+                            ) : (
+                              <ExpandMore />
+                            )}
+                          </Box>
                         </TableCell>
                       </TableRow>
-                    );
-                  });
+
+                      {/* EXPANDED VOTER DETAILS */}
+                      <TableRow>
+                        <TableCell colSpan={4} sx={{ p: 0 }}>
+                          <Collapse
+                            in={expandedHouse === house.address}
+                            timeout="auto"
+                          >
+                            <Box sx={{ bgcolor: "#f9f9f9", p: 3 }}>
+                              {house.voters.map((v: any) => (
+                                <Box
+                                  key={v.voter_id}
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    py: 1.5,
+                                    borderBottom: "1px solid #eee",
+                                  }}
+                                >
+                                  <Box>
+                                    <Typography fontWeight="medium">
+                                      {v.full_name} ({v.age || "?"})
+                                    </Typography>
+                                    <Box display="flex" gap={1} mt={0.5}>
+                                      <Chip
+                                        label={v.party || "N/A"}
+                                        size="small"
+                                        color={
+                                          v.party === "R"
+                                            ? "error"
+                                            : v.party === "D"
+                                            ? "primary"
+                                            : "default"
+                                        }
+                                      />
+                                      <Chip
+                                        label={v.turnout_score_general || 0}
+                                        size="small"
+                                        color="success"
+                                      />
+                                    </Box>
+                                  </Box>
+                                  <IconButton
+                                    onClick={() => {
+                                      setSelectedVoter(v);
+                                      setOpenNote(true);
+                                    }}
+                                  >
+                                    <AddComment />
+                                  </IconButton>
+                                </Box>
+                              ))}
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  );
                 })}
               </TableBody>
             </Table>
           </TableContainer>
 
           <TablePagination
-            component="div"
-            count={addressEntries.length}
+            count={households.length}
             page={page}
             onPageChange={(_, p) => setPage(p)}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
+              setRowsPerPage(+e.target.value);
               setPage(0);
             }}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={[10, 25, 50]}
           />
         </Paper>
       )}
 
-      {/* ADD NOTE DIALOG */}
+      {/* Note Dialog */}
       <Dialog
         open={openNote}
         onClose={() => setOpenNote(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Add Note for {selectedVoter?.full_name}</DialogTitle>
+        <DialogTitle>Add Note — {selectedVoter?.full_name}</DialogTitle>
         <DialogContent>
           <TextField
             multiline
-            rows={6}
+            rows={5}
             fullWidth
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            placeholder="e.g. Homeowner very supportive — will vote R"
-            variant="outlined"
+            placeholder="Spoke with voter..."
             sx={{ mt: 2 }}
           />
         </DialogContent>

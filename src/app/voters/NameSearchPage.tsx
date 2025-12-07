@@ -76,7 +76,7 @@ export default function NameSearchPage() {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
+      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
         Name Search — Find Any Voter
       </Typography>
 

@@ -383,26 +383,62 @@ export default function VoterListPage() {
                           }}
                         >
                           {(voter.phone_mobile || voter.phone_home) && (
-                            <>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
                               <Button
-                                size="small"
+                                component="a"
+                                href={`tel:${(
+                                  voter.phone_mobile ||
+                                  voter.phone_home ||
+                                  ""
+                                ).replace(/\D/g, "")}`}
                                 startIcon={<Phone />}
-                                onClick={() =>
-                                  call(voter.phone_mobile || voter.phone_home!)
-                                }
-                              >
-                                Call
-                              </Button>
-                              <Button
                                 size="small"
-                                startIcon={<Message />}
-                                onClick={() =>
-                                  text(voter.phone_mobile || voter.phone_home!)
-                                }
+                                variant="contained"
+                                color="success"
+                                sx={{
+                                  minWidth: { xs: "40px", sm: "auto" },
+                                  px: { xs: 1, sm: 2 },
+                                }}
                               >
-                                Text
+                                <Box
+                                  component="span"
+                                  sx={{ display: { xs: "none", sm: "inline" } }}
+                                >
+                                  Call
+                                </Box>
                               </Button>
-                            </>
+
+                              <Button
+                                component="a"
+                                href={`sms:${(
+                                  voter.phone_mobile ||
+                                  voter.phone_home ||
+                                  ""
+                                ).replace(/\D/g, "")}`}
+                                startIcon={<Message />}
+                                size="small"
+                                variant="contained"
+                                color="info"
+                                sx={{
+                                  minWidth: { xs: "40px", sm: "auto" },
+                                  px: { xs: 1, sm: 2 },
+                                }}
+                              >
+                                <Box
+                                  component="span"
+                                  sx={{ display: { xs: "none", sm: "inline" } }}
+                                >
+                                  Text
+                                </Box>
+                              </Button>
+                            </Box>
                           )}
                           {voter.email && (
                             <Button
