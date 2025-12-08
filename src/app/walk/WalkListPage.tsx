@@ -307,7 +307,8 @@ export default function WalkListPage() {
                                   sx={{ bgcolor: "white", color: "info.main" }}
                                 >
                                   <Message fontSize="small" />
-                                </IconButton> • 
+                                </IconButton>{" "}
+                                •
                               </>
                             ))}
                             {expandedHouse === house.address ? (

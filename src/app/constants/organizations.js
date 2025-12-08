@@ -27,8 +27,79 @@ const ORGANIZATIONS = [
         "545": { name: "West Sadsbury", committeemen: ["uid222", "uid223"] },
         "235": { name: "West Fallowfield", committeemen: ["uid224", "uid225"] },
       }
-    }
-  }
+    },
+    },
+    congressional_districts: {
+      "6": {
+        name: "PA-06",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      }
+    },
+    state_senate_districts: {
+      "STS19": {
+        name: "PA Senate District 19",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STS44": {
+        name: "PA Senate District 44",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STS09": {
+        name: "PA Senate District 09",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+    },
+    state_house_districts: {
+      "STH013": {
+        name: "PA House District 13",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH026": {
+        name: "PA House District 26",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH074": {
+        name: "PA House District 74",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH155": {
+        name: "PA House District 155",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH156": {
+        name: "PA House District 156",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH157": {
+        name: "PA House District 157",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH158": {
+        name: "PA House District 158",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH160": {
+        name: "PA House District 160",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+      "STH167": {
+        name: "PA House District 167",
+        representative_uid: "rep_uid_006",
+        precincts: {}
+      },
+    },
   },
 ];
 
