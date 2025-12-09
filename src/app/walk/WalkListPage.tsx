@@ -156,7 +156,7 @@ export default function WalkListPage() {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
+      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
         Walk List — Grouped by Address
       </Typography>
 

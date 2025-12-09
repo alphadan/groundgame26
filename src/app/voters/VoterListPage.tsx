@@ -194,7 +194,7 @@ export default function VoterListPage() {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom color="#d32f2f" fontWeight="bold">
+      <Typography variant="h4" gutterBottom color="#B22234" fontWeight="bold">
         Voter Contact List — Your Precincts
       </Typography>
 
@@ -400,11 +400,21 @@ export default function VoterListPage() {
                                 ).replace(/\D/g, "")}`}
                                 startIcon={<Phone />}
                                 size="small"
-                                variant="contained"
-                                color="success"
+                                variant="outlined"
                                 sx={{
                                   minWidth: { xs: "40px", sm: "auto" },
                                   px: { xs: 1, sm: 2 },
+                                  backgroundColor: "white",
+                                  color: "#2e7d32",
+                                  borderColor: "#2e7d32",
+                                  "&:hover": {
+                                    backgroundColor: "#f1f8e9",
+                                    borderColor: "#2e7d32",
+                                    color: "#2e7d32",
+                                  },
+                                  "& .MuiSvgIcon-root": {
+                                    color: "#2e7d32",
+                                  },
                                 }}
                               >
                                 <Box
@@ -424,11 +434,24 @@ export default function VoterListPage() {
                                 ).replace(/\D/g, "")}`}
                                 startIcon={<Message />}
                                 size="small"
-                                variant="contained"
-                                color="info"
+                                variant="outlined"
                                 sx={{
                                   minWidth: { xs: "40px", sm: "auto" },
                                   px: { xs: 1, sm: 2 },
+                                  backgroundColor: "white",
+                                  color: "#1976d2",
+                                  borderColor: "#1976d2",
+                                  "&:hover": {
+                                    backgroundColor: "#e3f2fd",
+                                    borderColor: "#1565c0",
+                                    color: "#1565c0",
+                                  },
+                                  "& .MuiSvgIcon-root": {
+                                    color: "#1976d2",
+                                  },
+                                  "&:hover .MuiSvgIcon-root": {
+                                    color: "#1565c0",
+                                  },
                                 }}
                               >
                                 <Box

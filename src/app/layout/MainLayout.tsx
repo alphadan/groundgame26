@@ -1,4 +1,4 @@
-// src/app/layout/MainLayout.tsx — FINAL: Clean & Professional Active State
+// src/app/layout/MainLayout.tsx — FINAL WITH HEADER, BREADCRUMBS & AVATAR DROPDOWN
 import { useState, useEffect, ReactNode } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -16,6 +16,11 @@ import {
   ListItemIcon,
   ListItemText,
   useMediaQuery,
+  Breadcrumbs,
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
 } from "@mui/material";
 import {
   BarChart,
@@ -27,9 +32,10 @@ import {
   Phone,
   DirectionsWalk,
   LocationOn,
+  Home as HomeIcon,
+  Settings,
 } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
-import Settings from "@mui/icons-material/Settings";
 import Logo from "../../components/ui/Logo";
 
 const drawerWidth = 260;
@@ -44,12 +50,31 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Avatar dropdown
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => setAnchorEl(null);
+
+  // Get current user
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) navigate("/login");
+      else setCurrentUser(user);
     });
     return unsubscribe;
   }, [navigate]);
+
+  // Breadcrumb name
+  const pathnames = location.pathname.split("/").filter((x) => x);
+  const breadcrumbName =
+    pathnames.length > 0
+      ? pathnames[pathnames.length - 1]
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase())
+      : "Dashboard";
 
   const menuItems = [
     { text: "My Precincts", icon: <HomeWork />, path: "/my-precincts" },
@@ -107,11 +132,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     minWidth: 40,
                   }}
                 >
-                  {isActive && item.text === "Interactive Map" ? (
-                    <LocationOn color="error" />
-                  ) : (
-                    item.icon
-                  )}
+                  {item.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.text}
@@ -125,7 +146,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
           );
         })}
 
-        {/* Log Out */}
         <ListItem disablePadding>
           <ListItemButton onClick={() => signOut(auth)}>
             <ListItemIcon>
@@ -169,6 +189,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
+        {/* Mobile Top Bar */}
         {!isDesktop && (
           <AppBar position="fixed" sx={{ bgcolor: "#B22234" }}>
             <Toolbar>
@@ -179,7 +200,92 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </Toolbar>
           </AppBar>
         )}
-        <Toolbar />
+
+        {/* NEW PAGE HEADER — BREADCRUMBS + SETTINGS + AVATAR */}
+        <Box
+          sx={{
+            bgcolor: "white",
+            borderBottom: 1,
+            borderColor: "divider",
+            position: "sticky",
+            top: 0,
+            zIndex: 1099,
+          }}
+        >
+          <Toolbar
+            sx={{
+              justifyContent: "space-between",
+              minHeight: "64px !important",
+            }}
+          >
+            {/* Breadcrumbs */}
+            <Breadcrumbs aria-label="breadcrumb">
+              <IconButton
+                onClick={() => navigate("/my-precincts")}
+                size="small"
+              >
+                <HomeIcon sx={{ color: "#0A3161" }} />
+              </IconButton>
+              <Typography color="text.primary" fontWeight="medium">
+                {breadcrumbName}
+              </Typography>
+            </Breadcrumbs>
+
+            {/* Right Side: Settings + Avatar */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Tooltip title="Settings">
+                <IconButton onClick={() => navigate("/settings")}>
+                  <Settings />
+                </IconButton>
+              </Tooltip>
+
+              <Tooltip
+                title={currentUser?.displayName || currentUser?.email || "User"}
+              >
+                <IconButton onClick={handleAvatarClick}>
+                  <Avatar
+                    src={currentUser?.photoURL || ""}
+                    alt={currentUser?.displayName || ""}
+                    sx={{ width: 36, height: 36 }}
+                  >
+                    {(currentUser?.displayName ||
+                      currentUser?.email ||
+                      "U")[0].toUpperCase()}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleClose();
+                    navigate("/settings");
+                  }}
+                >
+                  <Settings fontSize="small" sx={{ mr: 1 }} />
+                  Settings
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleClose();
+                    signOut(auth);
+                  }}
+                >
+                  <Logout fontSize="small" sx={{ mr: 1 }} />
+                  Log Out
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </Box>
+
+        {/* Main Page Content */}
         <Box p={3}>{children || <Outlet />}</Box>
       </Box>
     </Box>

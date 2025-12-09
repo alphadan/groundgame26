@@ -92,7 +92,7 @@ export default function LoginPage() {
       <Box width={420} p={5} bgcolor="white" borderRadius={3} boxShadow={4}>
         <Typography
           variant="h4"
-          color="#d32f2f"
+          color="#B22234"
           textAlign="center"
           fontWeight="bold"
           mb={1}
@@ -147,8 +147,8 @@ export default function LoginPage() {
             disabled={loading}
             sx={{
               mt: 3,
-              bgcolor: "#d32f2f",
-              "&:hover": { bgcolor: "#b71c1c" },
+              bgcolor: "#B22234",
+              "&:hover": { bgcolor: "#B22234DD" },
             }}
           >
             {loading ? "Signing in..." : "Sign In"}

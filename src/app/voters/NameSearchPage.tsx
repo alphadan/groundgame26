@@ -82,13 +82,13 @@ export default function NameSearchPage() {
 
       <Paper sx={{ p: 4, mb: 6 }}>
         <Typography variant="h6" gutterBottom color="#0A3161">
-          Search by Full Name
+          Search by Name
         </Typography>
 
         <Grid container spacing={3} alignItems="center">
           <Grid>
             <TextField
-              label="Enter Full Name"
+              label="Enter Name"
               fullWidth
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
@@ -224,22 +224,73 @@ export default function NameSearchPage() {
                         {(voter.phone_mobile || voter.phone_home) && (
                           <>
                             <Button
-                              size="small"
+                              component="a"
+                              href={`tel:${(
+                                voter.phone_mobile ||
+                                voter.phone_home ||
+                                ""
+                              ).replace(/\D/g, "")}`}
                               startIcon={<Phone />}
-                              onClick={() =>
-                                call(voter.phone_mobile || voter.phone_home!)
-                              }
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                minWidth: { xs: "40px", sm: "auto" },
+                                px: { xs: 1, sm: 2 },
+                                backgroundColor: "white",
+                                color: "#2e7d32",
+                                borderColor: "#2e7d32",
+                                "&:hover": {
+                                  backgroundColor: "#f1f8e9",
+                                  borderColor: "#2e7d32",
+                                  color: "#2e7d32",
+                                },
+                                "& .MuiSvgIcon-root": {
+                                  color: "#2e7d32",
+                                },
+                              }}
                             >
-                              Call
+                              <Box
+                                component="span"
+                                sx={{ display: { xs: "none", sm: "inline" } }}
+                              >
+                                Call
+                              </Box>
                             </Button>
                             <Button
-                              size="small"
+                              component="a"
+                              href={`sms:${(
+                                voter.phone_mobile ||
+                                voter.phone_home ||
+                                ""
+                              ).replace(/\D/g, "")}`}
                               startIcon={<Message />}
-                              onClick={() =>
-                                text(voter.phone_mobile || voter.phone_home!)
-                              }
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                minWidth: { xs: "40px", sm: "auto" },
+                                px: { xs: 1, sm: 2 },
+                                backgroundColor: "white",
+                                color: "#1976d2",
+                                borderColor: "#1976d2",
+                                "&:hover": {
+                                  backgroundColor: "#e3f2fd",
+                                  borderColor: "#1565c0",
+                                  color: "#1565c0",
+                                },
+                                "& .MuiSvgIcon-root": {
+                                  color: "#1976d2",
+                                },
+                                "&:hover .MuiSvgIcon-root": {
+                                  color: "#1565c0",
+                                },
+                              }}
                             >
-                              Text
+                              <Box
+                                component="span"
+                                sx={{ display: { xs: "none", sm: "inline" } }}
+                              >
+                                Text
+                              </Box>
                             </Button>
                           </>
                         )}
