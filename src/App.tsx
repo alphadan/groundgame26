@@ -17,6 +17,7 @@ import MyPrecinctsPage from "./app/dashboard/MyPrecinctsPage";
 import VoterListPage from "./app/voters/VoterListPage";
 import WalkListPage from "./app/walk/WalkListPage";
 import NameSearchPage from "./app/voters/NameSearchPage";
+import SettingsPage from "./app/settings/SettingsPage";
 
 import { Box, CircularProgress, Typography } from "@mui/material";
 
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="/voters" element={<VoterListPage />} />
         <Route path="/walk-lists" element={<WalkListPage />} />
         <Route path="/name-search" element={<NameSearchPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/reports" replace />} />
         <Route path="*" element={<Navigate to="/reports" replace />} />

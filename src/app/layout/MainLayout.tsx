@@ -29,6 +29,7 @@ import {
   LocationOn,
 } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
+import Settings from "@mui/icons-material/Settings";
 import Logo from "../../components/ui/Logo";
 
 const drawerWidth = 260;
@@ -60,13 +61,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
     { text: "Walk Lists", icon: <DirectionsWalk />, path: "/walk-lists" },
     { text: "Name Search", icon: <SearchIcon />, path: "/name-search" },
     { divider: true },
-    { text: "Interactive Map", icon: <LocationOn />, path: "/maps" },
+    { text: "Settings", icon: <Settings />, path: "/settings" },
   ];
 
   const drawer = (
     <Box>
-      <Toolbar sx={{mt: 2, mb: 2}}>
-        <Logo/>
+      <Toolbar sx={{ mt: 2, mb: 2 }}>
+        <Logo />
       </Toolbar>
       <List>
         {menuItems.map((item, index) => {
