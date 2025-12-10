@@ -35,6 +35,11 @@ import {
   Home as HomeIcon,
   Settings,
 } from "@mui/icons-material";
+import GopElephant from "../../assets/icons/gop-elephant.svg"; // if needed
+import CandidateRosette from "../../assets/icons/candidate-rosette.svg";
+import CountyChairCrown from "../../assets/icons/county-chair-crown.svg";
+import AreaChairBadge from "../../assets/icons/area-chair-badge.svg";
+import CommitteepersonShield from "../../assets/icons/committeeperson-shield.svg";
 import SearchIcon from "@mui/icons-material/Search";
 import Logo from "../../components/ui/Logo";
 
@@ -57,13 +62,31 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
   const handleClose = () => setAnchorEl(null);
 
-  // Get current user
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userAffiliation, setUserAffiliation] = useState<string | null>(null);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) navigate("/login");
-      else setCurrentUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      setCurrentUser(user);
+
+      // Force refresh token to get latest custom claims
+      try {
+        const idTokenResult = await user.getIdTokenResult(true);
+        const claims = idTokenResult.claims;
+
+        setUserRole((claims.role as string) || null);
+        setUserAffiliation((claims.affiliation as string) || null);
+      } catch (err) {
+        console.error("Failed to get custom claims:", err);
+      }
     });
+
     return unsubscribe;
   }, [navigate]);
 
@@ -232,6 +255,37 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </Breadcrumbs>
 
             {/* Right Side: Settings + Avatar */}
+            {userRole === "candidate" && (
+              <img
+                src={CandidateRosette}
+                alt="Candidate"
+                style={{ height: 28 }}
+              />
+            )}
+            {userRole === "county_chair" && (
+              <img
+                src={CountyChairCrown}
+                alt="County Chair"
+                style={{ height: 28 }}
+              />
+            )}
+            {userRole === "area_chair" && (
+              <img
+                src={AreaChairBadge}
+                alt="Area Chair"
+                style={{ height: 28 }}
+              />
+            )}
+            {userRole === "committeeperson" && (
+              <img
+                src={CommitteepersonShield}
+                alt="Committeeperson"
+                style={{ height: 28 }}
+              />
+            )}
+            {userRole === "gop" && (
+              <img src={GopElephant} alt="g o p" style={{ height: 28 }} />
+            )}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Tooltip title="Settings">
                 <IconButton onClick={() => navigate("/settings")}>

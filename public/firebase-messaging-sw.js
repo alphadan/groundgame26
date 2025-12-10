@@ -8,12 +8,12 @@ self.importScripts(
 
 // These will be replaced at build time by inject script
 const firebaseConfig = {
-  apiKey: "AIzaSyCE-C7sweNG4sX_uXXtke9f4IGGoPshrNY",
+  apiKey: "AIzaSyDUMMY_DO_NOT_USE_REAL_KEY",
   authDomain: "groundgame26.firebaseapp.com",
   projectId: "groundgame26",
   storageBucket: "groundgame26.appspot.com",
   messagingSenderId: "707878592124",
-  appId: "1:707878592124:web:73464af30f8573639773f9",
+  appId: "1:1234567890:web:0000000000000000",
 };
 
 firebase.initializeApp(firebaseConfig);

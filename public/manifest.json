@@ -4,7 +4,7 @@
   "description": "Pennsylvania Republican Ground Game Portal",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#B22234",
+  "background_color": "#FFFFFF",
   "theme_color": "#B22234",
   "orientation": "portrait-primary",
   "icons": [

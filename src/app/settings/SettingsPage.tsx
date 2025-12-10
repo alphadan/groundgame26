@@ -10,9 +10,15 @@ import {
   Alert,
   CircularProgress,
   InputAdornment,
+  Link,
 } from "@mui/material";
 import { PhotoCamera, Save } from "@mui/icons-material";
-import { getAuth, updateProfile, updateEmail } from "firebase/auth";
+import {
+  getAuth,
+  updateProfile,
+  updateEmail,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { doc, updateDoc } from "firebase/firestore";
 import { auth, db, storage } from "../../lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -163,6 +169,22 @@ export default function SettingsPage() {
           >
             {loading ? "Saving..." : "Save Changes"}
           </Button>
+          <Box sx={{ mt: 3, textAlign: "center" }}>
+            {user?.email ? (
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => sendPasswordResetEmail(auth, user.email!)}
+                sx={{ color: "#B22234", fontWeight: "medium" }}
+              >
+                Send Password Reset Email
+              </Link>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Email not available
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Box>
     </Container>

@@ -9,20 +9,12 @@ let swContent = fs.readFileSync(swPath, "utf8");
 
 swContent = swContent
   .replace(
-    "___REACT_APP_FIREBASE_API_KEY___",
-    process.env.REACT_APP_FIREBASE_API_KEY || ""
-  )
-  .replace(
     "___REACT_APP_FIREBASE_AUTH_DOMAIN___",
     process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || ""
   )
   .replace(
     "___REACT_APP_FIREBASE_MESSAGING_SENDER_ID___",
     process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || ""
-  )
-  .replace(
-    "___REACT_APP_FIREBASE_APP_ID___",
-    process.env.REACT_APP_FIREBASE_APP_ID || ""
   );
 
 fs.writeFileSync(swPath, swContent);
