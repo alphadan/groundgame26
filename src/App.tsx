@@ -1,13 +1,20 @@
 // src/App.tsx — FINAL: Your exact style + MapsPage fully integrated
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { onAuthStateChanged, User } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  User,
+  getIdTokenResult,
+  onIdTokenChanged,
+} from "firebase/auth";
 import { multiFactor } from "firebase/auth";
 import { auth } from "./lib/firebase";
 
 import LoginPage from "./components/auth/LoginPage";
 import EnrollMFAScreen from "./components/auth/EnrollMFAScreen";
 import MainLayout from "./app/layout/MainLayout";
+import { AuthProvider } from "./context/AuthContext";
+import AppInitializer from "./components/AppInitializer";
 
 import ReportsPage from "./app/reports/ReportsPage";
 import ActionsPage from "./app/actions/ActionsPage";
@@ -24,6 +31,7 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [claims, setClaims] = useState<any>(null);
 
   useEffect(() => {
     console.log("App.tsx: Setting up auth listener...");
@@ -42,6 +50,25 @@ export default function App() {
       unsubscribe();
     };
   }, []);
+
+  // Minimal claims listener (runs after AppInitializer)
+  useEffect(() => {
+    if (!user) {
+      setClaims(null);
+      return;
+    }
+
+    const unsubscribe = onIdTokenChanged(auth, async (u: User | null) => {
+      if (u) {
+        const tokenResult = await u.getIdTokenResult();
+        setClaims(tokenResult.claims);
+      } else {
+        setClaims(null);
+      }
+    });
+
+    return unsubscribe;
+  }, [user]);
 
   if (loading) {
     console.log("App.tsx: Still loading auth state...");
@@ -78,23 +105,28 @@ export default function App() {
 
   console.log("MFA enrolled → showing main app with MainLayout");
   return (
-    <MainLayout>
-      <Routes>
-        {/* Core Pages */}
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/maps" element={<MapsPage />} /> {/* ← Fully integrated */}
-        <Route path="/analysis" element={<AnalysisPage />} />
-        <Route path="/actions" element={<ActionsPage />} />
-        {/* Admin / User Pages */}
-        <Route path="/my-precincts" element={<MyPrecinctsPage />} />
-        <Route path="/voters" element={<VoterListPage />} />
-        <Route path="/walk-lists" element={<WalkListPage />} />
-        <Route path="/name-search" element={<NameSearchPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/reports" replace />} />
-        <Route path="*" element={<Navigate to="/reports" replace />} />
-      </Routes>
-    </MainLayout>
+    <AppInitializer>
+      <AuthProvider user={user} claims={claims}>
+        <MainLayout>
+          <Routes>
+            {/* Core Pages */}
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/maps" element={<MapsPage />} />{" "}
+            {/* ← Fully integrated */}
+            <Route path="/analysis" element={<AnalysisPage />} />
+            <Route path="/actions" element={<ActionsPage />} />
+            {/* Admin / User Pages */}
+            <Route path="/my-precincts" element={<MyPrecinctsPage />} />
+            <Route path="/voters" element={<VoterListPage />} />
+            <Route path="/walk-lists" element={<WalkListPage />} />
+            <Route path="/name-search" element={<NameSearchPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/reports" replace />} />
+            <Route path="*" element={<Navigate to="/reports" replace />} />
+          </Routes>
+        </MainLayout>
+      </AuthProvider>
+    </AppInitializer>
   );
 }

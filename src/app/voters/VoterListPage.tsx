@@ -47,7 +47,7 @@ import {
   onSnapshot,
   Unsubscribe,
 } from "firebase/firestore";
-import { db, auth } from "../../lib/firebase";
+import { auth, db } from "../../lib/firebase";
 
 const PRECINCTS = [
   { value: "", label: "All Precincts" },

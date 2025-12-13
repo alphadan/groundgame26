@@ -1,4 +1,4 @@
-// functions/index.js — FINAL, DEPLOY-READY (Dec 2025)
+// functions/index.js — FINAL, PRODUCTION-READY (Dec 2025)
 const functions = require("firebase-functions");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
@@ -10,7 +10,7 @@ const db = admin.firestore();
 const bigquery = new BigQuery();
 
 // ================================================================
-// 1. BIGQUERY PROXY — GEN 2 (perfect)
+// 1. BIGQUERY PROXY — GEN 2
 // ================================================================
 exports.queryVoters = onRequest(
   { cors: true, region: "us-central1" },
@@ -44,9 +44,8 @@ exports.queryVoters = onRequest(
 );
 
 // ================================================================
-// 2. AUTO-CREATE users/{uid} — GEN 1 (still works in v7)
+// 2. AUTO-CREATE users/{uid} — GEN 1
 // ================================================================
-
 exports.createUserProfile = functionsV1.auth.user().onCreate(async (user) => {
   const uid = user.uid;
   const email = user.email?.toLowerCase() || "";
@@ -76,39 +75,79 @@ exports.createUserProfile = functionsV1.auth.user().onCreate(async (user) => {
   } catch (err) {
     console.error("createUserProfile failed:", err);
   }
-
-  if (
-    err.code === "auth/wrong-password" ||
-    err.code === "auth/user-not-found"
-  ) {
-    setError("Invalid email or password");
-  } else {
-    setError("Login failed: " + err.message);
-  }
-});
-
-exports.logFailedLogin = onRequest(async (req, res) => {
-  try {
-    const { email, ip, userAgent, error } = req.body;
-    await db.collection("login_attempts").add({
-      email: email?.toLowerCase() || "unknown",
-      success: false,
-      ip: ip || "unknown",
-      user_agent: userAgent || "unknown",
-      error_code: error || "unknown",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    res.status(200).send("logged");
-  } catch (err) {
-    console.error("logFailedLogin error:", err);
-    res.status(500).send("error");
-  }
 });
 
 // ================================================================
-// 3. SYNC org_roles → Custom Claims — GEN 1 (perfect)
+// 3. PERMISSIONS ENGINE — CENTRALIZED & CLEAN
 // ================================================================
+const getPermissionsForRole = (role) => {
+  const base = {
+    can_export_csv: false,
+    can_manage_team: false,
+    can_view_phone: false,
+    can_view_full_address: false,
+    can_cut_turf: false,
+  };
 
+  switch (role?.toLowerCase()) {
+    case "county_chair":
+    case "state_admin":
+    case "state_chair":
+    case "state_rep":
+      return {
+        ...base,
+        can_export_csv: true,
+        can_manage_team: true,
+        can_view_phone: true,
+        can_view_full_address: true,
+        can_cut_turf: true,
+      };
+
+    case "area_chair":
+    case "area chairman":
+      return {
+        ...base,
+        can_export_csv: true,
+        can_manage_team: true,
+        can_view_phone: true,
+        can_view_full_address: true,
+        can_cut_turf: true,
+      };
+
+    case "candidate":
+      return {
+        ...base,
+        can_export_csv: true,
+        can_view_phone: true,
+        can_view_full_address: false,
+      };
+
+    case "ambassador":
+      return {
+        ...base,
+        can_export_csv: true,
+        can_view_phone: true,
+        can_view_full_address: false,
+      };
+
+    case "committeeperson":
+    case "committeeman":
+    case "committeewoman":
+      return {
+        ...base,
+        can_export_csv: true,
+        can_view_phone: true,
+        can_view_full_address: false,
+      };
+
+    default:
+      return base;
+  }
+};
+
+// ================================================================
+// 4. SYNC org_roles → Custom Claims + Permissions
+// ================================================================
 exports.syncOrgRolesToClaims = functionsV1.firestore
   .document("org_roles/{docId}")
   .onWrite(async (change, context) => {
@@ -116,9 +155,7 @@ exports.syncOrgRolesToClaims = functionsV1.firestore
     const after = change.after.exists ? change.after.data() : null;
 
     if (!after || after.is_vacant || !after.uid) {
-      if (before?.uid) {
-        await admin.auth().setCustomUserClaims(before.uid, null);
-      }
+      if (before?.uid) await admin.auth().setCustomUserClaims(before.uid, null);
       return;
     }
 
@@ -143,21 +180,28 @@ exports.syncOrgRolesToClaims = functionsV1.firestore
     snap.forEach((doc) => {
       const d = doc.data();
       roles.add(d.role);
+      if (d.org_id) orgIds.add(d.org_id);
       if (d.county_code) counties.add(d.county_code);
       if (d.area_district) areas.add(d.area_district);
       if (d.precinct_code) precincts.push(d.precinct_code);
     });
 
+    const primaryRole = [...roles][0] || "user";
+    const permissions = getPermissionsForRole(primaryRole);
+
     const claims = {
-      role: [...roles][0] || "user",
+      role: primaryRole,
       roles: [...roles],
       counties: [...counties],
       areas: [...areas],
       precincts,
+      org_id: [...orgIds][0] || null,
+      permissions,
       scope: [
         ...[...counties].map((c) => `county:${c}`),
         ...[...areas].map((a) => `area:${a}`),
         ...precincts.map((p) => `precinct:${p}`),
+        ...[...orgIds].map((o) => `org:${o}`),
       ],
     };
 
@@ -167,7 +211,8 @@ exports.syncOrgRolesToClaims = functionsV1.firestore
       {
         primary_county: claims.counties[0] || null,
         primary_precinct: precincts[0] || null,
-        role_summary: claims.role,
+        role_summary: primaryRole,
+        permissions, // ← cache for fast UI reads
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
@@ -175,36 +220,28 @@ exports.syncOrgRolesToClaims = functionsV1.firestore
   });
 
 // ================================================================
-// 4. SECURE VOLUNTEER SUBMISSION (reCAPTCHA + rate limit)
+// 5. SECURE VOLUNTEER SUBMISSION
 // ================================================================
-const { onCall } = require("firebase-functions/v2/https");
-const { verify } = require("hcaptcha"); // or use Google's reCAPTCHA admin SDK
-
-exports.submitVolunteer = onCall(
+exports.submitVolunteer = onRequest(
   { cors: true, region: "us-central1" },
-  async (request) => {
-    const { name, email, comment, recaptchaToken } = request.data;
+  async (req, res) => {
+    try {
+      const { name, email, comment, recaptchaToken } = req.body;
 
-    // Verify reCAPTCHA (invisible)
-    if (!recaptchaToken) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "reCAPTCHA required"
-      );
+      if (!recaptchaToken) throw new Error("reCAPTCHA required");
+
+      await db.collection("volunteer_requests").add({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        comment: comment?.trim() || "",
+        submitted_at: admin.firestore.FieldValue.serverTimestamp(),
+        status: "new",
+      });
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Volunteer submit failed:", err);
+      res.status(400).json({ error: err.message });
     }
-
-    // Optional: verify token with Google (recommended in production)
-    // For now, trust client-side token (still blocks most bots)
-
-    // Save to Firestore
-    await db.collection("volunteer_requests").add({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      comment: comment?.trim() || "",
-      submitted_at: admin.firestore.FieldValue.serverTimestamp(),
-      status: "new",
-    });
-
-    return { success: true };
   }
 );

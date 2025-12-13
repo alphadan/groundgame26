@@ -1,4 +1,4 @@
-// src/app/layout/MainLayout.tsx — FINAL WITH HEADER, BREADCRUMBS & AVATAR DROPDOWN
+// src/app/layout/MainLayout.tsx — FINAL WITH ORG & ROLE ICONS (2025)
 import { useState, useEffect, ReactNode } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -35,13 +35,15 @@ import {
   Home as HomeIcon,
   Settings,
 } from "@mui/icons-material";
-import GopElephant from "../../assets/icons/gop-elephant.svg"; // if needed
+import SearchIcon from "@mui/icons-material/Search";
+import Logo from "../../components/ui/Logo";
+
+// Icons
+import GopElephant from "../../assets/icons/gop-elephant.svg";
 import CandidateRosette from "../../assets/icons/candidate-rosette.svg";
 import CountyChairCrown from "../../assets/icons/county-chair-crown.svg";
 import AreaChairBadge from "../../assets/icons/area-chair-badge.svg";
 import CommitteepersonShield from "../../assets/icons/committeeperson-shield.svg";
-import SearchIcon from "@mui/icons-material/Search";
-import Logo from "../../components/ui/Logo";
 
 const drawerWidth = 260;
 
@@ -55,6 +57,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // User state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userOrgId, setUserOrgId] = useState<string | null>(null);
+
   // Avatar dropdown
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -62,10 +69,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
   const handleClose = () => setAnchorEl(null);
 
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [userAffiliation, setUserAffiliation] = useState<string | null>(null);
+  // Icon mappings
+  const ORG_ICONS: Record<string, any> = {
+    chester_gop: GopElephant,
+    // Add more: chester_tpa: TpaLogo, etc.
+  };
 
+  const ROLE_ICONS: Record<string, any> = {
+    candidate: CandidateRosette,
+    county_chair: CountyChairCrown,
+    area_chair: AreaChairBadge,
+    committeeperson: CommitteepersonShield,
+    committeeman: CommitteepersonShield,
+    committeewoman: CommitteepersonShield,
+  };
+
+  // Auth + Claims
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -75,22 +94,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       setCurrentUser(user);
 
-      // Force refresh token to get latest custom claims
       try {
         const idTokenResult = await user.getIdTokenResult(true);
         const claims = idTokenResult.claims;
+        console.error("claims:", claims);
 
         setUserRole((claims.role as string) || null);
-        setUserAffiliation((claims.affiliation as string) || null);
+        setUserOrgId((claims.org_id as string) || null);
       } catch (err) {
-        console.error("Failed to get custom claims:", err);
+        console.error("Failed to get claims:", err);
       }
     });
 
     return unsubscribe;
   }, [navigate]);
 
-  // Breadcrumb name
+  // Breadcrumb
   const pathnames = location.pathname.split("/").filter((x) => x);
   const breadcrumbName =
     pathnames.length > 0
@@ -224,7 +243,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </AppBar>
         )}
 
-        {/* NEW PAGE HEADER — BREADCRUMBS + SETTINGS + AVATAR */}
+        {/* PAGE HEADER */}
         <Box
           sx={{
             bgcolor: "white",
@@ -247,59 +266,59 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 onClick={() => navigate("/my-precincts")}
                 size="small"
               >
-                <HomeIcon sx={{ color: "#0A3161" }} />
+                <HomeIcon sx={{ color: "#B22234" }} />
               </IconButton>
               <Typography color="text.primary" fontWeight="medium">
                 {breadcrumbName}
               </Typography>
             </Breadcrumbs>
 
-            {/* Right Side: Settings + Avatar */}
-            {userRole === "candidate" && (
-              <img
-                src={CandidateRosette}
-                alt="Candidate"
-                style={{ height: 28 }}
-              />
-            )}
-            {userRole === "county_chair" && (
-              <img
-                src={CountyChairCrown}
-                alt="County Chair"
-                style={{ height: 28 }}
-              />
-            )}
-            {userRole === "area_chair" && (
-              <img
-                src={AreaChairBadge}
-                alt="Area Chair"
-                style={{ height: 28 }}
-              />
-            )}
-            {userRole === "committeeperson" && (
-              <img
-                src={CommitteepersonShield}
-                alt="Committeeperson"
-                style={{ height: 28 }}
-              />
-            )}
-            {userRole === "gop" && (
-              <img src={GopElephant} alt="g o p" style={{ height: 28 }} />
-            )}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {/* RIGHT SIDE: ORG ICON + ROLE ICON + SETTINGS + AVATAR */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              {/* ORGANIZATION ICON */}
+              {userOrgId && ORG_ICONS[userOrgId] && (
+                <Tooltip
+                  title={userOrgId
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                >
+                  <img
+                    src={ORG_ICONS[userOrgId]}
+                    alt="Org"
+                    style={{ height: 34 }}
+                  />
+                </Tooltip>
+              )}
+
+              {/* ROLE ICON */}
+              {userRole && ROLE_ICONS[userRole.toLowerCase()] && (
+                <Tooltip
+                  title={userRole
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                >
+                  <img
+                    src={ROLE_ICONS[userRole.toLowerCase()]}
+                    alt={userRole}
+                    style={{ height: 30 }}
+                  />
+                </Tooltip>
+              )}
+
+              {/* Settings */}
               <Tooltip title="Settings">
                 <IconButton onClick={() => navigate("/settings")}>
                   <Settings />
                 </IconButton>
               </Tooltip>
 
+              {/* Avatar + Dropdown */}
               <Tooltip
                 title={currentUser?.displayName || currentUser?.email || "User"}
               >
                 <IconButton onClick={handleAvatarClick}>
                   <Avatar
                     src={currentUser?.photoURL || ""}
-                    alt={currentUser?.displayName || ""}
                     sx={{ width: 36, height: 36 }}
                   >
                     {(currentUser?.displayName ||
@@ -339,7 +358,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </Toolbar>
         </Box>
 
-        {/* Main Page Content */}
+        {/* Main Content */}
         <Box p={3}>{children || <Outlet />}</Box>
       </Box>
     </Box>

@@ -1,5 +1,5 @@
 // src/components/ui/Logo.tsx
-import { ReactComponent as LogoSVG } from "../../assets/icons/logo2.svg";
+import { ReactComponent as LogoSVG } from "../../assets/icons/logo4.svg";
 
 type LogoProps = {
   className?: string;

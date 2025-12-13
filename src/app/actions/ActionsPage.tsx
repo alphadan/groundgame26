@@ -139,31 +139,31 @@ export default function ActionsPage() {
   };
 
   // Add this styled Select once (for reuse)
-const NavySelect = styled(Select)({
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0A3161",
-  },
-  "&:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0A3161",
-  },
-  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "#0A3161",
-  },
-  "& .MuiSvgIcon-root": {
-    color: "#0A3161",
-  },
-  "& .MuiSelect-select": {
-    color: "#0A3161",
-  },
-});
+  const NavySelect = styled(Select)({
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#0A3161",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#0A3161",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#0A3161",
+    },
+    "& .MuiSvgIcon-root": {
+      color: "#0A3161",
+    },
+    "& .MuiSelect-select": {
+      color: "#0A3161",
+    },
+  });
 
-const NavyInputLabel = styled(InputLabel)({
-  color: "#0A3161",
-  fontWeight: "medium",
-  "&.Mui-focused": {
+  const NavyInputLabel = styled(InputLabel)({
     color: "#0A3161",
-  },
-});
+    fontWeight: "medium",
+    "&.Mui-focused": {
+      color: "#0A3161",
+    },
+  });
 
   return (
     <Box p={4}>
@@ -171,7 +171,7 @@ const NavyInputLabel = styled(InputLabel)({
         Actions — Win the Ground Game
       </Typography>
 
-      {/* EMAIL CAMPAIGN BUILDER */}
+      {/* EMAIL CAMPAIGN BUILDER *
       <Paper sx={{ p: 4, mb: 6 }}>
         <Typography variant="h5" gutterBottom>
           Email Campaign Builder — Target Outstanding Ballots
@@ -225,6 +225,7 @@ const NavyInputLabel = styled(InputLabel)({
           <Button variant="outlined">Preview</Button>
         </Box>
       </Paper>
+      */}
 
       {/* SUGGESTED MESSAGES — With Filters + Get Messages Button */}
       <Card sx={{ mb: 6 }}>

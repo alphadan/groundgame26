@@ -41,7 +41,7 @@ import {
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
-import { db, auth } from "../../lib/firebase";
+import { auth, db } from "../../lib/firebase";
 import { useVoters } from "../../hooks/useVoters";
 
 export default function WalkListPage() {

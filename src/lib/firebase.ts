@@ -1,6 +1,7 @@
+// src/lib/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -13,6 +14,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// THIS CONFIG HAS FIXED IT FOR MANY WITH THE SAME ERROR
+export const db = initializeFirestore(
+  app,
+  {
+    experimentalAutoDetectLongPolling: true, // Auto-detect and use long polling if needed
+  },
+  "(default)"
+);
+
 export const storage = getStorage(app);

@@ -3,7 +3,12 @@ import { useState, useEffect, useRef } from "react";
 import {
   signInWithEmailAndPassword,
   RecaptchaVerifier,
+  sendEmailVerification,
   sendPasswordResetEmail,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  multiFactor,
+  getMultiFactorResolver,
 } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -20,6 +25,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import LogoSvg from "../../assets/icons/icon-blue-512.svg";
 
 declare global {
   interface Window {
@@ -47,14 +53,18 @@ export default function LoginPage() {
   const [showThankYou, setShowThankYou] = useState(false);
 
   useEffect(() => {
-    if (!recaptchaRef.current || window.recaptchaVerifier) return;
+    // Only create if not exists
+    if (window.recaptchaVerifier || !recaptchaRef.current) return;
 
     window.recaptchaVerifier = new RecaptchaVerifier(
-      recaptchaRef.current,
-      { size: "invisible" },
-      auth
+      auth,
+      recaptchaRef.current!,
+      { size: "invisible" }
     );
-    window.recaptchaVerifier.render().catch(() => {});
+
+    // Don't call render() manually — let Firebase call it when needed
+    // window.recaptchaVerifier.render().catch(() => {});
+
     return () => {
       window.recaptchaVerifier?.clear();
       window.recaptchaVerifier = undefined;
@@ -65,19 +75,105 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
+      // This will succeed only if user has NO MFA enrolled
       await signInWithEmailAndPassword(auth, email, password);
+      // If we reach here → login successful (no MFA)
+      const user = auth.currentUser;
+      if (user && !user.emailVerified) {
+        await sendEmailVerification(user); // ← add this
+        alert(
+          "Check your email! Click the verification link we just sent, then log in again."
+        );
+        await auth.signOut(); // ← add this
+        return;
+      }
     } catch (err: any) {
-      if (
+      if (err.code === "auth/multi-factor-auth-required") {
+        // ← THIS IS THE CASE YOU'RE HITTING
+        await handleMFAChallenge(err);
+      } else if (
         err.code === "auth/wrong-password" ||
         err.code === "auth/user-not-found"
       ) {
         setError("Invalid email or password");
+      } else if (err.code === "auth/too-many-requests") {
+        setError(
+          "Too many failed attempts. Try again later or reset your password."
+        );
       } else {
         setError("Login failed: " + err.message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // New function — handles the SMS MFA step
+  const handleMFAChallenge = async (error: any) => {
+    const resolver = getMultiFactorResolver(auth, error);
+
+    // We only support SMS second factor right now
+    const phoneInfoOptions = resolver.hints.find(
+      (hint: any) => hint.factorId === PhoneMultiFactorGenerator.FACTOR_ID
+    );
+
+    if (!phoneInfoOptions) {
+      setError("No phone number enrolled for MFA");
+      return;
+    }
+
+    try {
+      // VERY IMPORTANT: Clear + recreate verifier to avoid "already rendered" error
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
+      }
+
+      // Re-create a fresh invisible verifier
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        auth,
+        recaptchaRef.current!,
+        { size: "invisible" }
+      );
+
+      const phoneAuthProvider = new PhoneAuthProvider(auth);
+      const verificationId = await phoneAuthProvider.verifyPhoneNumber(
+        {
+          multiFactorHint: phoneInfoOptions,
+          session: resolver.session,
+        },
+        window.recaptchaVerifier
+      );
+
+      // Ask user for the SMS code
+      const smsCode = prompt(
+        "Enter the 6-digit code sent to your phone:"
+      )?.trim();
+
+      if (!smsCode) {
+        setError("Code required");
+        return;
+      }
+
+      const cred = PhoneAuthProvider.credential(verificationId, smsCode);
+      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
+
+      // Complete MFA sign-in
+      await resolver.resolveSignIn(multiFactorAssertion);
+
+      // Success! User is now signed in
+      console.log("MFA login successful");
+    } catch (mfaErr: any) {
+      console.error(mfaErr);
+      if (mfaErr.code === "auth/invalid-verification-code") {
+        setError("Invalid SMS code");
+      } else if (mfaErr.code === "auth/missing-verification-code") {
+        setError("Please enter the code");
+      } else {
+        setError("MFA failed: " + mfaErr.message);
+      }
     }
   };
 
@@ -150,15 +246,15 @@ export default function LoginPage() {
             {/* Logo */}
             <Box
               component="img"
-              src="/icons/icon-blue-512x512.png"
+              src={LogoSvg}
               alt="GroundGame26"
               sx={{
-                width: "100%",
-                maxWidth: 320,
+                width: "80%",
+                maxWidth: 280,
                 height: "auto",
                 mx: "auto",
                 display: "block",
-                mb: 1,
+                mb: 3,
               }}
             />
 
@@ -225,15 +321,15 @@ export default function LoginPage() {
             {/* Logo */}
             <Box
               component="img"
-              src="/icons/icon-blue-512x512.png"
+              src={LogoSvg}
               alt="GroundGame26"
               sx={{
                 width: "100%",
-                maxWidth: 320,
+                maxWidth: 280,
                 height: "auto",
                 mx: "auto",
                 display: "block",
-                mb: 1,
+                mb: 2,
               }}
             />
 
@@ -241,9 +337,12 @@ export default function LoginPage() {
               variant="h6"
               textAlign="center"
               fontWeight="bold"
-              color="#212121"
+              color="#5e5e5e"
               mb={4}
-              sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}
+              sx={{
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                fontStyle: "italic",
+              }}
             >
               A Republican Get Out The Vote App
             </Typography>
